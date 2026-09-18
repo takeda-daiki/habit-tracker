@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f7f5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="習慣トラッカー" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>習慣トラッカー</title>
+  <style>
+    :root{
+      --bg:#f7f7f5;--card:#ffffff;--text:#1e1f22;--muted:#74777d;--line:#dcdedb;
+      --accent:#2f6d4d;--accent-soft:#e7f1eb;--danger:#a63f3f;--shadow:0 1px 2px rgba(0,0,0,.05)
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif}
+    body{margin:0;min-height:100vh;background:var(--bg)}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:760px;margin:0 auto;padding:env(safe-area-inset-top) 14px calc(92px + env(safe-area-inset-bottom))}
+    .top{padding:18px 2px 12px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+    h1{font-size:24px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:3px}
+    .datebox{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 10px;min-height:44px}
+    .section-title{font-size:13px;color:var(--muted);margin:18px 4px 8px;font-weight:700;letter-spacing:.02em}
+    .list{display:grid;gap:8px}.row{width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;min-height:62px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;box-shadow:var(--shadow)}
+    .row strong{display:block;font-size:16px}.row small{display:block;color:var(--muted);margin-top:2px}.value{font-weight:700;text-align:right;white-space:nowrap}.value.muted{color:var(--muted);font-weight:600}
+    .pill{display:inline-flex;align-items:center;gap:5px;background:var(--accent-soft);color:var(--accent);padding:5px 8px;border-radius:999px;font-size:12px;font-weight:700}
+    .screen{display:none}.screen.active{display:block}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 0 10px}.toolbar h2{font-size:20px;margin:0;min-width:0;overflow-wrap:anywhere}
+    .btn{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:11px;min-height:44px;padding:9px 12px;font-weight:700}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.danger{color:var(--danger)}
+    .card{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--shadow);margin-bottom:12px}.card h3{font-size:16px;margin:0 0 10px}.help{font-size:13px;color:var(--muted);line-height:1.55}
+    .score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.score-btn{min-height:54px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:20px;font-weight:800}.score-btn.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+    .field{display:grid;gap:6px;margin-bottom:10px}.field label{font-size:13px;color:var(--muted);font-weight:700}.field input,.field select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);padding:10px 12px;font-size:16px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{flex:1}
+    .chart-wrap{overflow-x:auto}.chart{display:block;width:100%;min-width:560px;height:auto}.chart text{fill:var(--muted);font-size:11px}.chart .grid{stroke:var(--line);stroke-width:1}.chart .line{fill:none;stroke:var(--accent);stroke-width:3}.chart .dot{fill:var(--accent)}.chart .zero{stroke:#777;stroke-width:1;stroke-dasharray:4 4}
+    .legend{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .set-head,.set-row{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) 44px;gap:7px;align-items:center}.set-head.body,.set-row.body{grid-template-columns:34px minmax(0,1fr) 44px}.set-head{font-size:12px;color:var(--muted);padding:0 3px 4px}.set-row{margin-bottom:7px}.set-row input{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 9px;font-size:16px;background:#fff}.set-no{color:var(--muted);font-size:13px;text-align:center}.icon-btn{min-height:44px;border:1px solid var(--line);background:#fff;border-radius:10px}.summary{display:flex;justify-content:space-between;gap:12px;align-items:end;padding-top:10px;border-top:1px solid var(--line);margin-top:10px}.summary b{font-size:22px}
+    .exercise-row{display:flex;gap:8px;align-items:stretch}.exercise-row .row{flex:1}.tiny{width:48px;flex:0 0 48px;border:1px solid var(--line);background:#fff;border-radius:12px;font-weight:800}
+    .settings-item{padding:10px 0;border-bottom:1px solid var(--line)}.settings-item:last-child{border-bottom:0}.settings-item b{display:block}.settings-item span{font-size:13px;color:var(--muted)}
+    .nav{position:fixed;left:0;right:0;bottom:0;background:rgba(247,247,245,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 14px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav-inner{max-width:760px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}.nav button{min-height:50px;border:0;border-radius:12px;background:transparent;font-weight:800;color:var(--muted)}.nav button.active{background:var(--card);color:var(--accent);border:1px solid var(--line)}
+    .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1f2321;color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:30;white-space:nowrap}.toast.show{opacity:1}
+    .empty{padding:18px;text-align:center;color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:12px}
+    @media(max-width:430px){.app{padding-left:10px;padding-right:10px}.top{align-items:flex-start;flex-direction:column}.datebox{width:100%}.two{grid-template-columns:1fr 1fr}.row{padding:11px 12px}.toolbar h2{font-size:18px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <section id="homeScreen" class="screen active">
+    <div class="top">
+      <div><h1>習慣トラッカー</h1><div class="sub">終わったものから記録</div></div>
+      <input id="selectedDate" class="datebox" type="date" />
+    </div>
+    <div id="habitList" class="list"></div>
+  </section>
+
+  <section id="detailScreen" class="screen">
+    <div class="toolbar"><button id="detailBack" class="btn" type="button">← 戻る</button><h2 id="detailTitle"></h2><span></span></div>
+    <div id="detailEditor"></div>
+    <div class="card"><h3>日別推移</h3><div id="detailChart"></div></div>
+  </section>
+
+  <section id="workoutScreen" class="screen">
+    <div class="toolbar"><button id="workoutBack" class="btn" type="button">← 戻る</button><h2>筋トレ</h2><button id="showAddExercise" class="btn primary" type="button">＋ 種目</button></div>
+    <div id="workoutDaySummary" class="card"></div>
+    <div id="addExerciseCard" class="card" hidden>
+      <h3>種目を追加</h3>
+      <div class="field"><label for="exerciseName">種目名</label><input id="exerciseName" placeholder="例：ベンチプレス" /></div>
+      <div class="field"><label for="exerciseType">種類</label><select id="exerciseType"><option value="weighted">重量種目</option><option value="bodyweight">自重種目</option></select></div>
+      <div class="actions"><button id="cancelAddExercise" class="btn" type="button">キャンセル</button><button id="addExercise" class="btn primary" type="button">追加</button></div>
+    </div>
+    <div id="exerciseList" class="list"></div>
+  </section>
+
+  <section id="exerciseScreen" class="screen">
+    <div class="toolbar"><button id="exerciseBack" class="btn" type="button">← 種目一覧</button><h2 id="exerciseTitle"></h2><button id="renameExercise" class="btn" type="button">編集</button></div>
+    <div class="card">
+      <h3 id="exerciseDateLabel">今日のセット</h3>
+      <div id="setHeader"></div>
+      <div id="sets"></div>
+      <button id="addSet" class="btn" type="button" style="width:100%;margin-top:4px">＋ セット</button>
+      <div class="summary"><span id="volumeLabel" class="help">総ボリューム</span><b id="volumeValue">0</b></div>
+      <div class="actions" style="margin-top:12px"><button id="saveSets" class="btn primary" type="button">この日の記録を保存</button></div>
+    </div>
+    <div class="card"><h3 id="exerciseChartTitle">推移</h3><div id="exerciseChart"></div></div>
+  </section>
+
+  <section id="settingsScreen" class="screen">
+    <div class="top"><div><h1>設定</h1><div class="sub">習慣の追加・削除と睡眠基準を管理</div></div></div>
+    <div class="card">
+      <h3>習慣を追加</h3>
+      <div class="field"><label for="newHabitName">習慣名</label><input id="newHabitName" placeholder="例：英語学習" maxlength="40" /></div>
+      <div class="field"><label for="newHabitKind">記録方式</label><select id="newHabitKind"><option value="duration">作業時間（○時間○分）</option><option value="score">0 / 1 / 2</option></select></div>
+      <button id="addHabit" class="btn primary" type="button" style="width:100%">習慣を追加</button>
+      <p class="help">追加した習慣はホームの一番下に表示します。0 / 1 / 2 は既存項目と同じく、0 = できなかった、1 = まあまあ / 一部できた、2 = できた、です。</p>
+    </div>
+    <div class="card"><h3>習慣を管理</h3><div id="habitManagement"></div><p class="help">起床時間・体重・筋トレ・夜更かしは特殊形式のため固定です。それ以外は削除できます。</p></div>
+    <div class="card">
+      <h3>睡眠基準を追加</h3>
+      <div class="field"><label for="effectiveDate">適用開始日</label><input id="effectiveDate" type="date" /></div>
+      <div class="two">
+        <div class="field"><label for="wakeBase">起床基準</label><input id="wakeBase" type="time" value="07:00" /></div>
+        <div class="field"><label for="bedBase">就寝基準</label><input id="bedBase" type="time" value="22:30" /></div>
+      </div>
+      <button id="saveBaseline" class="btn primary" type="button" style="width:100%">基準を保存</button>
+      <p class="help">今日以降の日付だけ設定できます。未来日を指定すれば、その日から新しい基準になります。</p>
+    </div>
+    <div class="card"><h3>基準履歴</h3><div id="baselineHistory"></div></div>
+    <div class="card">
+      <h3>バックアップ</h3>
+      <div class="actions">
+        <button id="exportBackup" class="btn primary" type="button">バックアップを書き出す</button>
+        <button id="importBackup" class="btn" type="button">バックアップから復元</button>
+      </div>
+      <input id="backupFile" type="file" accept="application/json,.json" hidden />
+      <p class="help">記録・習慣・筋トレ種目・睡眠基準を1つのJSONファイルに保存します。iPhoneでは定期的に「ファイル」アプリへ保存してください。復元すると現在のデータはバックアップ内容で置き換わります。</p>
+    </div>
+    <div class="card"><h3>保存について</h3><p class="help">日々の記録はこのWebアプリのブラウザ領域に保存されます。サイトデータを削除すると記録が消えるため、バックアップを定期的に書き出してください。</p></div>
+  </section>
+</div>
+
+<nav class="nav"><div class="nav-inner"><button id="navHome" class="active" type="button">今日の記録</button><button id="navSettings" type="button">設定</button></div></nav>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'habitTrackerV1';
+  const today = isoDate(new Date());
+
+  function defaultHabitDefinitions(){
+    return [
+      {id:'wake',label:'起床時間',kind:'wake',locked:true},
+      {id:'sun',label:'朝陽',kind:'score'},
+      {id:'weight',label:'体重',kind:'weight',locked:true},
+      {id:'career',label:'進路設計',kind:'duration'},
+      {id:'research',label:'研究',kind:'duration'},
+      {id:'review',label:'反復',kind:'duration'},
+      {id:'novel',label:'新奇領域',kind:'duration'},
+      {id:'walk',label:'散歩',kind:'duration'},
+      {id:'workout',label:'筋トレ',kind:'workout',locked:true},
+      {id:'read',label:'読書',kind:'duration'},
+      {id:'snack',label:'Noお菓子',kind:'score'},
+      {id:'refill',label:'Noおかわり',kind:'score'},
+      {id:'massage',label:'マッサージポール',kind:'score'},
+      {id:'bed',label:'夜更かし',kind:'bed',locked:true},
+      {id:'clean',label:'掃除',kind:'score'},
+      {id:'pressure',label:'つぼおし',kind:'score'}
+    ];
+  }
+
+  let data = loadData();
+  let selectedDate = today;
+  let currentHabit = null;
+  let currentExerciseId = null;
+  let editingSets = [];
+
+  const $ = s => document.querySelector(s);
+  const selectedDateInput = $('#selectedDate');
+  selectedDateInput.max = today;
+  selectedDateInput.value = today;
+  $('#effectiveDate').min = today;
+  $('#effectiveDate').value = today;
+
+  function defaultData(){
+    return {
+      entries:{},
+      baselines:[{effectiveDate:today,wake:'07:00',bed:'22:30'}],
+      habits:defaultHabitDefinitions(),
+      exercises:[],
+      workouts:{}
+    };
+  }
+
+  function loadData(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return defaultData();
+      const parsed = JSON.parse(raw);
+      return {
+        entries: parsed.entries || {},
+        baselines: Array.isArray(parsed.baselines) && parsed.baselines.length ? parsed.baselines : [{effectiveDate:today,wake:'07:00',bed:'22:30'}],
+        habits: Array.isArray(parsed.habits) && parsed.habits.length ? parsed.habits : defaultHabitDefinitions(),
+        exercises: Array.isArray(parsed.exercises) ? parsed.exercises : [],
+        workouts: parsed.workouts || {}
+      };
+    }catch(e){ return defaultData(); }
+  }
+  function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  function isoDate(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+  function fmtDate(s){ const [y,m,d]=s.split('-'); return `${Number(m)}/${Number(d)}`; }
+  function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('show'),1400); }
+  function getDay(date){ if(!data.entries[date]) data.entries[date]={}; return data.entries[date]; }
+  function getBaselineFor(date){
+    const candidates=data.baselines.filter(b=>b.effectiveDate<=date).sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));
+    return candidates[candidates.length-1] || data.baselines.slice().sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate))[0];
+  }
+  function minutes(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
+  function wakeDelay(actual, base){ return Math.max(0, minutes(actual)-minutes(base)); }
+  function bedDelay(actual, base){
+    let a=minutes(actual), b=minutes(base);
+    let diff=a-b;
+    // 例: 基準22:30に対する00:30は翌日扱いで +120分。
+    if(diff < -720) diff += 1440;
+    return Math.max(0, diff);
+  }
+  function durationLabel(v){ const n=Number(v)||0,h=Math.floor(n/60),m=n%60; return h ? `${h}時間${m?`${m}分`:''}` : `${m}分`; }
+  function entryLabel(habit, value){
+    if(value===undefined || value===null || value==='') return '未記録';
+    if(habit.kind==='duration') return durationLabel(value);
+    if(habit.kind==='weight') return `${Number(value).toFixed(1)} kg`;
+    if(habit.kind==='score') return `${value} / 2`;
+    if(habit.kind==='wake' || habit.kind==='bed') return value.time || '未記録';
+    return String(value);
+  }
+  function workoutSummary(date){
+    const day=data.workouts[date]||{}; let ex=0,sets=0;
+    Object.values(day).forEach(arr=>{ const valid=(arr||[]).filter(s=>validSet(s)); if(valid.length){ex++;sets+=valid.length;} });
+    return {ex,sets};
+  }
+  function validSet(s){ return (Number(s.reps)||0)>0 && (s.weight===undefined || s.weight===null || Number(s.weight)>=0); }
+
+  function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $('#'+id).classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+  function updateNav(which){ $('#navHome').classList.toggle('active',which==='home'); $('#navSettings').classList.toggle('active',which==='settings'); }
+
+  function renderHome(){
+    const list=$('#habitList'); list.innerHTML=''; const day=getDay(selectedDate);
+    data.habits.forEach(h=>{
+      const b=document.createElement('button'); b.type='button'; b.className='row';
+      const left=document.createElement('div'); const name=document.createElement('strong'); name.textContent=h.label; const sub=document.createElement('small'); sub.textContent='タップして記録・推移を確認'; left.append(name,sub);
+      const value=document.createElement('div'); value.className='value';
+      if(h.kind==='workout'){
+        const s=workoutSummary(selectedDate); value.textContent=s.ex?`${s.ex}種目・${s.sets}セット`:'未記録'; if(!s.ex)value.classList.add('muted');
+      }else{
+        const v=day[h.id]; value.textContent=entryLabel(h,v); if(v===undefined)value.classList.add('muted');
+      }
+      b.append(left,value);
+      b.addEventListener('click',()=> h.kind==='workout' ? openWorkout() : openHabit(h));
+      list.appendChild(b);
+    });
+  }
+
+  function openHabit(h){ currentHabit=h; $('#detailTitle').textContent=h.label; renderHabitEditor(); renderHabitChart(); showScreen('detailScreen'); updateNav('none'); }
+  function renderHabitEditor(){
+    const h=currentHabit, day=getDay(selectedDate), box=$('#detailEditor'); box.innerHTML='';
+    const card=document.createElement('div'); card.className='card';
+    const heading=document.createElement('h3'); heading.textContent=`${fmtDate(selectedDate)} の記録`; card.appendChild(heading);
+
+    if(h.kind==='score'){
+      const grid=document.createElement('div'); grid.className='score-grid';
+      [0,1,2].forEach(n=>{ const btn=document.createElement('button'); btn.type='button'; btn.className='score-btn'+(day[h.id]===n?' selected':''); btn.textContent=n; btn.addEventListener('click',()=>{ day[h.id]=n; persist(); renderHabitEditor(); renderHabitChart(); renderHome(); toast('保存しました'); }); grid.appendChild(btn); });
+      card.appendChild(grid);
+      const p=document.createElement('p'); p.className='help'; p.textContent='0 = できなかった、1 = まあまあ / 一部できた、2 = できた。タップすると即保存します。'; card.appendChild(p);
+    }
+
+    if(h.kind==='duration'){
+      const current=Number(day[h.id]||0), two=document.createElement('div'); two.className='two';
+      const hField=fieldSelect('時間','hourSel',Array.from({length:13},(_,i)=>({v:i,t:`${i}時間`})),Math.floor(current/60));
+      const mOptions=[]; for(let m=0;m<60;m+=5)mOptions.push({v:m,t:`${m}分`});
+      const mField=fieldSelect('分','minuteSel',mOptions,current%60); two.append(hField.wrap,mField.wrap); card.appendChild(two);
+      const save=makeButton('保存','primary'); save.style.width='100%'; save.addEventListener('click',()=>{ day[h.id]=Number(hField.select.value)*60+Number(mField.select.value); persist(); renderHabitChart(); renderHome(); toast('保存しました'); }); card.appendChild(save);
+    }
+
+    if(h.kind==='weight'){
+      const f=document.createElement('div'); f.className='field'; f.innerHTML='<label>体重 (kg)</label>'; const inp=document.createElement('input'); inp.type='number'; inp.step='0.1'; inp.min='20'; inp.max='300'; inp.inputMode='decimal'; inp.value=day[h.id]??''; f.appendChild(inp); card.appendChild(f);
+      const save=makeButton('保存','primary'); save.style.width='100%'; save.addEventListener('click',()=>{ const v=Number(inp.value); if(!Number.isFinite(v)||v<20||v>300){toast('体重を確認してください');return;} day[h.id]=Math.round(v*10)/10;persist();renderHabitChart();renderHome();toast('保存しました');});card.appendChild(save);
+    }
+
+    if(h.kind==='wake' || h.kind==='bed'){
+      const base=getBaselineFor(selectedDate); const existing=day[h.id];
+      const f=document.createElement('div'); f.className='field'; f.innerHTML=`<label>${h.kind==='wake'?'起床':'就寝'}時刻</label>`; const inp=document.createElement('input'); inp.type='time'; inp.value=existing?.time||''; f.appendChild(inp); card.appendChild(f);
+      const info=document.createElement('p'); info.className='help'; info.textContent=`この日の基準：${h.kind==='wake'?base.wake:base.bed}。基準より早い場合は差分 0 分として扱います。`; card.appendChild(info);
+      const save=makeButton('保存','primary'); save.style.width='100%'; save.addEventListener('click',()=>{ if(!inp.value){toast('時刻を入力してください');return;} const active=getBaselineFor(selectedDate); const baseline=h.kind==='wake'?active.wake:active.bed; const delay=h.kind==='wake'?wakeDelay(inp.value,baseline):bedDelay(inp.value,baseline); day[h.id]={time:inp.value,baseline,delay}; persist(); renderHabitEditor();renderHabitChart();renderHome();toast('保存しました'); }); card.appendChild(save);
+      if(existing?.time){ const pill=document.createElement('div'); pill.style.marginTop='10px'; pill.innerHTML=`<span class="pill">基準超過 ${existing.delay||0}分</span>`; card.appendChild(pill); }
+    }
+
+    if(day[h.id]!==undefined){
+      const del=makeButton('この日の記録を削除','danger'); del.style.width='100%'; del.style.marginTop='8px'; del.addEventListener('click',()=>{ delete day[h.id];persist();renderHabitEditor();renderHabitChart();renderHome();toast('削除しました'); }); card.appendChild(del);
+    }
+    box.appendChild(card);
+  }
+
+  function fieldSelect(label,id,options,value){ const wrap=document.createElement('div'); wrap.className='field'; const lab=document.createElement('label'); lab.textContent=label; const select=document.createElement('select'); select.id=id; options.forEach(o=>{const op=document.createElement('option');op.value=o.v;op.textContent=o.t;select.appendChild(op)}); select.value=String(value); wrap.append(lab,select); return {wrap,select}; }
+  function makeButton(text,cls=''){const b=document.createElement('button');b.type='button';b.className=`btn ${cls}`;b.textContent=text;return b;}
+
+  function habitSeries(h){
+    const dates=lastNDates(selectedDate,30); return dates.map(date=>{
+      const v=data.entries[date]?.[h.id]; let y=null;
+      if(v!==undefined){ if(h.kind==='wake'||h.kind==='bed') y=Number(v.delay||0); else y=Number(v); }
+      return {date,y};
+    });
+  }
+  function renderHabitChart(){
+    const h=currentHabit; let unit=''; if(h.kind==='weight')unit='kg'; else if(h.kind==='duration'||h.kind==='wake'||h.kind==='bed')unit='分'; else unit='0–2';
+    $('#detailChart').innerHTML=chartHTML(habitSeries(h),unit,h.kind==='score'?{min:0,max:2}:null,'過去30日');
+  }
+  function lastNDates(endDate,n){ const [y,m,d]=endDate.split('-').map(Number), end=new Date(y,m-1,d),out=[]; for(let i=n-1;i>=0;i--){const x=new Date(end);x.setDate(end.getDate()-i);out.push(isoDate(x));}return out; }
+  function chartHTML(series,unit,fixed,caption){
+    const values=series.filter(p=>p.y!==null&&Number.isFinite(p.y)).map(p=>p.y); if(!values.length)return `<div class="empty">まだ記録がありません</div><div class="legend"><span>${caption}</span><span>${unit}</span></div>`;
+    let min=fixed?fixed.min:Math.min(...values), max=fixed?fixed.max:Math.max(...values); if(min===max){ if(min===0)max=1; else{min=Math.max(0,min*.9);max=max*1.1;} }
+    if(!fixed && min>0)min=Math.max(0,min-(max-min)*.15); const W=620,H=240,L=44,R=16,T=14,B=42, pw=W-L-R,ph=H-T-B;
+    const x=i=>L+(series.length===1?0:pw*i/(series.length-1)); const y=v=>T+ph-(v-min)/(max-min)*ph;
+    let svg=`<div class="chart-wrap"><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="日別推移グラフ">`;
+    for(let i=0;i<5;i++){const yy=T+ph*i/4,val=max-(max-min)*i/4;svg+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"></line><text x="4" y="${yy+4}">${formatTick(val)}</text>`;}
+    if(min<=0&&max>=0){const zy=y(0);svg+=`<line class="zero" x1="${L}" x2="${W-R}" y1="${zy}" y2="${zy}"></line>`;}
+    const segs=[];let cur=[];series.forEach((p,i)=>{if(p.y===null){if(cur.length)segs.push(cur);cur=[];}else cur.push({x:x(i),y:y(p.y),p});});if(cur.length)segs.push(cur);
+    segs.forEach(seg=>{if(seg.length>1)svg+=`<polyline class="line" points="${seg.map(q=>`${q.x},${q.y}`).join(' ')}"></polyline>`;seg.forEach(q=>svg+=`<circle class="dot" cx="${q.x}" cy="${q.y}" r="4"><title>${q.p.date}: ${q.p.y} ${unit}</title></circle>`);});
+    [0,7,14,21,29].forEach(i=>{if(series[i])svg+=`<text x="${x(i)}" y="${H-14}" text-anchor="middle">${fmtDate(series[i].date)}</text>`});
+    svg+='</svg></div>'; return `${svg}<div class="legend"><span>${caption}</span><span>${unit}</span></div>`;
+  }
+  function formatTick(n){ return Math.abs(n)>=1000?Math.round(n).toLocaleString():Number.isInteger(n)?n:String(Math.round(n*10)/10); }
+
+  function openWorkout(){ renderWorkoutList(); showScreen('workoutScreen'); updateNav('none'); }
+  function renderWorkoutList(){
+    const s=workoutSummary(selectedDate); $('#workoutDaySummary').innerHTML=`<h3>${fmtDate(selectedDate)} の筋トレ</h3><div class="summary"><span class="help">記録済み</span><b>${s.ex}種目・${s.sets}セット</b></div>`;
+    const list=$('#exerciseList'); list.innerHTML=''; if(!data.exercises.length){list.innerHTML='<div class="empty">まだ種目がありません。「＋ 種目」から追加してください。</div>';return;}
+    data.exercises.forEach(ex=>{
+      const wrap=document.createElement('div');wrap.className='exercise-row'; const row=document.createElement('button');row.type='button';row.className='row';
+      const daySets=data.workouts[selectedDate]?.[ex.id]||[], valid=daySets.filter(validSet); const left=document.createElement('div');left.innerHTML=`<strong>${escapeHtml(ex.name)}</strong><small>${ex.type==='bodyweight'?'自重種目':'重量種目'}</small>`; const val=document.createElement('div');val.className='value'+(valid.length?'':' muted');val.textContent=valid.length?`${valid.length}セット`:'未記録'; row.append(left,val); row.addEventListener('click',()=>openExercise(ex.id));
+      const del=document.createElement('button');del.type='button';del.className='tiny';del.textContent='⋯';del.setAttribute('aria-label',`${ex.name}を編集`);del.addEventListener('click',()=>exerciseMenu(ex.id)); wrap.append(row,del);list.appendChild(wrap);
+    });
+  }
+  function exerciseMenu(id){
+    const ex=data.exercises.find(x=>x.id===id); if(!ex)return; const action=prompt(`「${ex.name}」\n名前を変更する場合は新しい名前を入力してください。\n削除する場合は DELETE と入力してください。`,ex.name); if(action===null)return;
+    if(action.trim()==='DELETE'){ if(confirm('この種目と全記録を削除しますか？')){data.exercises=data.exercises.filter(x=>x.id!==id);Object.keys(data.workouts).forEach(d=>{if(data.workouts[d])delete data.workouts[d][id]});persist();renderWorkoutList();toast('削除しました');}return; }
+    if(action.trim()){ex.name=action.trim();persist();renderWorkoutList();toast('変更しました');}
+  }
+  function openExercise(id){ currentExerciseId=id; const ex=data.exercises.find(x=>x.id===id); if(!ex)return; $('#exerciseTitle').textContent=ex.name; editingSets=JSON.parse(JSON.stringify(data.workouts[selectedDate]?.[id]||[])); if(!editingSets.length)editingSets=[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}]; renderSets();renderExerciseChart();showScreen('exerciseScreen'); }
+  function renderSets(){
+    const ex=data.exercises.find(x=>x.id===currentExerciseId); if(!ex)return; $('#exerciseDateLabel').textContent=`${fmtDate(selectedDate)} のセット`; $('#setHeader').innerHTML=ex.type==='bodyweight'?'<div class="set-head body"><div></div><div>回数</div><div></div></div>':'<div class="set-head"><div></div><div>重量 kg</div><div>回数</div><div></div></div>';
+    const box=$('#sets');box.innerHTML=''; editingSets.forEach((s,i)=>{
+      const row=document.createElement('div');row.className='set-row'+(ex.type==='bodyweight'?' body':''); const no=document.createElement('div');no.className='set-no';no.textContent=i+1; row.appendChild(no);
+      if(ex.type!=='bodyweight'){const w=document.createElement('input');w.type='number';w.min='0';w.step='0.5';w.inputMode='decimal';w.placeholder='重量';w.value=s.weight??'';w.addEventListener('input',()=>{s.weight=w.value;updateVolume();});row.appendChild(w);}
+      const r=document.createElement('input');r.type='number';r.min='0';r.step='1';r.inputMode='numeric';r.placeholder='回数';r.value=s.reps??'';r.addEventListener('input',()=>{s.reps=r.value;updateVolume();});row.appendChild(r);
+      const del=document.createElement('button');del.type='button';del.className='icon-btn';del.textContent='×';del.addEventListener('click',()=>{editingSets.splice(i,1);if(!editingSets.length)editingSets=[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}];renderSets();});row.appendChild(del);box.appendChild(row);
+    }); updateVolume();
+  }
+  function updateVolume(){
+    const ex=data.exercises.find(x=>x.id===currentExerciseId); if(!ex)return; const valid=editingSets.filter(validSet); let total=0;
+    if(ex.type==='bodyweight'){total=valid.reduce((a,s)=>a+(Number(s.reps)||0),0);$('#volumeLabel').textContent='合計回数';$('#volumeValue').textContent=`${total}回`;}else{total=valid.reduce((a,s)=>a+(Number(s.weight)||0)*(Number(s.reps)||0),0);$('#volumeLabel').textContent='総ボリューム（片腕種目も片腕換算）';$('#volumeValue').textContent=`${Math.round(total*10)/10} kg`;}
+  }
+  function renderExerciseChart(){
+    const ex=data.exercises.find(x=>x.id===currentExerciseId); if(!ex)return; const dates=lastNDates(selectedDate,30); const series=dates.map(date=>{const arr=data.workouts[date]?.[ex.id]; if(!arr)return{date,y:null};const valid=arr.filter(validSet); if(!valid.length)return{date,y:null}; const y=ex.type==='bodyweight'?valid.reduce((a,s)=>a+(Number(s.reps)||0),0):valid.reduce((a,s)=>a+(Number(s.weight)||0)*(Number(s.reps)||0),0);return{date,y};}); const unit=ex.type==='bodyweight'?'回':'kg'; $('#exerciseChartTitle').textContent=ex.type==='bodyweight'?'合計回数の推移':'総ボリュームの推移'; $('#exerciseChart').innerHTML=chartHTML(series,unit,null,'過去30日');
+  }
+
+  function habitKindLabel(kind){
+    if(kind==='duration') return '作業時間';
+    if(kind==='score') return '0 / 1 / 2';
+    if(kind==='wake') return '起床時刻（固定）';
+    if(kind==='bed') return '就寝時刻（固定）';
+    if(kind==='weight') return '体重（固定）';
+    if(kind==='workout') return '筋トレ（固定）';
+    return kind;
+  }
+  function renderHabitManagement(){
+    const box=$('#habitManagement'); box.innerHTML='';
+    data.habits.forEach(h=>{
+      const div=document.createElement('div'); div.className='settings-item';
+      const title=document.createElement('b'); title.textContent=h.label;
+      const meta=document.createElement('span'); meta.textContent=habitKindLabel(h.kind);
+      div.append(title,meta);
+      if(h.locked){
+        const fixed=document.createElement('span'); fixed.className='pill'; fixed.style.marginTop='7px'; fixed.style.display='inline-flex'; fixed.textContent='固定'; div.appendChild(fixed);
+      }else{
+        const del=makeButton('削除','danger'); del.style.marginTop='7px';
+        del.addEventListener('click',()=>deleteHabit(h.id)); div.appendChild(del);
+      }
+      box.appendChild(div);
+    });
+  }
+  function deleteHabit(id){
+    const h=data.habits.find(x=>x.id===id); if(!h || h.locked)return;
+    if(!confirm(`「${h.label}」を削除しますか？\nこの習慣の過去の記録も削除されます。`))return;
+    data.habits=data.habits.filter(x=>x.id!==id);
+    Object.values(data.entries).forEach(day=>{ if(day && Object.prototype.hasOwnProperty.call(day,id)) delete day[id]; });
+    persist(); renderHabitManagement(); renderHome(); toast('習慣を削除しました');
+  }
+
+  function renderBaselines(){
+    const box=$('#baselineHistory');box.innerHTML=''; const sorted=data.baselines.slice().sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));sorted.forEach(b=>{const div=document.createElement('div');div.className='settings-item';div.innerHTML=`<b>${b.effectiveDate}〜</b><span>起床 ${b.wake} / 就寝 ${b.bed}</span>`; if(b.effectiveDate>today){const del=makeButton('未来設定を削除','danger');del.style.marginTop='7px';del.addEventListener('click',()=>{data.baselines=data.baselines.filter(x=>x!==b);persist();renderBaselines();toast('削除しました');});div.appendChild(del);}box.appendChild(div);});
+  }
+
+  $('#selectedDate').addEventListener('change',e=>{ if(!e.target.value)return; if(e.target.value>today){e.target.value=today;selectedDate=today;}else selectedDate=e.target.value; renderHome(); });
+  $('#detailBack').addEventListener('click',()=>{renderHome();showScreen('homeScreen');updateNav('home');});
+  $('#workoutBack').addEventListener('click',()=>{renderHome();showScreen('homeScreen');updateNav('home');});
+  $('#exerciseBack').addEventListener('click',()=>{renderWorkoutList();showScreen('workoutScreen');});
+  $('#navHome').addEventListener('click',()=>{renderHome();showScreen('homeScreen');updateNav('home');});
+  $('#navSettings').addEventListener('click',()=>{renderHabitManagement();renderBaselines();showScreen('settingsScreen');updateNav('settings');});
+
+  $('#addHabit').addEventListener('click',()=>{
+    const name=$('#newHabitName').value.trim(), kind=$('#newHabitKind').value;
+    if(!name){toast('習慣名を入力してください');return;}
+    if(!['duration','score'].includes(kind)){toast('記録方式を確認してください');return;}
+    const duplicate=data.habits.some(h=>h.label.toLowerCase()===name.toLowerCase());
+    if(duplicate){toast('同じ名前の習慣があります');return;}
+    data.habits.push({id:'habit_'+Date.now(),label:name,kind});
+    persist(); $('#newHabitName').value=''; renderHabitManagement(); renderHome(); toast('習慣を追加しました');
+  });
+
+  $('#showAddExercise').addEventListener('click',()=>{$('#addExerciseCard').hidden=false;$('#exerciseName').focus();});
+  $('#cancelAddExercise').addEventListener('click',()=>{$('#addExerciseCard').hidden=true;$('#exerciseName').value='';});
+  $('#addExercise').addEventListener('click',()=>{const name=$('#exerciseName').value.trim(),type=$('#exerciseType').value;if(!name){toast('種目名を入力してください');return;}data.exercises.push({id:'ex_'+Date.now(),name,type});persist();$('#exerciseName').value='';$('#addExerciseCard').hidden=true;renderWorkoutList();toast('種目を追加しました');});
+  $('#addSet').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);editingSets.push(ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''});renderSets();});
+  $('#saveSets').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const cleaned=editingSets.map(s=>ex.type==='bodyweight'?{reps:Number(s.reps)||0}:{weight:Number(s.weight)||0,reps:Number(s.reps)||0}).filter(validSet);if(!data.workouts[selectedDate])data.workouts[selectedDate]={};if(cleaned.length)data.workouts[selectedDate][ex.id]=cleaned;else delete data.workouts[selectedDate][ex.id];persist();editingSets=JSON.parse(JSON.stringify(cleaned.length?cleaned:[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}]));renderSets();renderExerciseChart();toast('保存しました');});
+  $('#renameExercise').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const name=prompt('新しい種目名',ex.name);if(name&&name.trim()){ex.name=name.trim();persist();$('#exerciseTitle').textContent=ex.name;toast('変更しました');}});
+
+  $('#saveBaseline').addEventListener('click',()=>{const effectiveDate=$('#effectiveDate').value,wake=$('#wakeBase').value,bed=$('#bedBase').value;if(!effectiveDate||!wake||!bed){toast('すべて入力してください');return;}if(effectiveDate<today){toast('過去日は指定できません');return;} const existing=data.baselines.find(b=>b.effectiveDate===effectiveDate);if(existing){existing.wake=wake;existing.bed=bed;}else data.baselines.push({effectiveDate,wake,bed});data.baselines.sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));persist();renderBaselines();toast('基準を保存しました');});
+
+  function exportBackup(){
+    const payload={
+      app:'habit-tracker',
+      version:3,
+      exportedAt:new Date().toISOString(),
+      data
+    };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`habit-tracker-backup-${today}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    toast('バックアップを書き出しました');
+  }
+  function isObject(v){ return v && typeof v==='object' && !Array.isArray(v); }
+  function validateBackup(candidate){
+    if(!isObject(candidate)) return false;
+    if(!isObject(candidate.entries)) return false;
+    if(!Array.isArray(candidate.baselines) || !candidate.baselines.length) return false;
+    if(!Array.isArray(candidate.habits) || !candidate.habits.length) return false;
+    if(!Array.isArray(candidate.exercises)) return false;
+    if(!isObject(candidate.workouts)) return false;
+    return true;
+  }
+  function restoreBackup(candidate){
+    if(!validateBackup(candidate)) throw new Error('このアプリのバックアップ形式ではありません');
+    data={
+      entries:candidate.entries,
+      baselines:candidate.baselines,
+      habits:candidate.habits,
+      exercises:candidate.exercises,
+      workouts:candidate.workouts
+    };
+    persist();
+    selectedDate=today;
+    selectedDateInput.value=today;
+    renderHome();
+    renderHabitManagement();
+    renderBaselines();
+    showScreen('homeScreen');
+    updateNav('home');
+  }
+  $('#exportBackup').addEventListener('click',exportBackup);
+  $('#importBackup').addEventListener('click',()=>$('#backupFile').click());
+  $('#backupFile').addEventListener('change',async e=>{
+    const file=e.target.files && e.target.files[0];
+    e.target.value='';
+    if(!file)return;
+    if(!confirm('現在のデータをバックアップ内容で置き換えます。続けますか？'))return;
+    try{
+      const parsed=JSON.parse(await file.text());
+      const candidate=parsed && parsed.app==='habit-tracker' && parsed.data ? parsed.data : parsed;
+      restoreBackup(candidate);
+      toast('バックアップを復元しました');
+    }catch(err){
+      alert('復元できませんでした。正しいバックアップファイルか確認してください。\n\n'+(err && err.message ? err.message : '読み込みエラー'));
+    }
+  });
+
+  function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+
+  renderHome();
+  renderHabitManagement();
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').catch(()=>{});});
+  }
+})();
+</script>
+</body>
+</html>

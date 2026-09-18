@@ -1,0 +1,11 @@
+{
+  "name": "習慣トラッカー",
+  "short_name": "習慣トラッカー",
+  "description": "個人用の習慣・筋トレ記録アプリ",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f7f5",
+  "theme_color": "#f7f7f5"
+}

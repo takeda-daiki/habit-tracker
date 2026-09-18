@@ -42,6 +42,11 @@
     .nav{position:fixed;left:0;right:0;bottom:0;background:rgba(247,247,245,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 14px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav-inner{max-width:760px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}.nav button{min-height:50px;border:0;border-radius:12px;background:transparent;font-weight:800;color:var(--muted)}.nav button.active{background:var(--card);color:var(--accent);border:1px solid var(--line)}
     .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1f2321;color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:30;white-space:nowrap}.toast.show{opacity:1}
     .empty{padding:18px;text-align:center;color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:12px}
+    .timer-panel{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+    .timer-display{font-variant-numeric:tabular-nums;font-size:34px;font-weight:800;letter-spacing:.02em;text-align:center;padding:12px 0 14px}
+    .timer-status{text-align:center;color:var(--muted);font-size:13px;margin-top:-8px;margin-bottom:10px}
+    .session-list{display:grid;gap:7px;margin-top:10px}.session-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#fff}
+    .session-row span{font-size:13px}.session-row b{font-size:14px}.session-row button{min-height:36px;border:1px solid var(--line);background:#fff;border-radius:9px;color:var(--danger);font-weight:700}
     @media(max-width:430px){.app{padding-left:10px;padding-right:10px}.top{align-items:flex-start;flex-direction:column}.datebox{width:100%}.two{grid-template-columns:1fr 1fr}.row{padding:11px 12px}.toolbar h2{font-size:18px}}
   </style>
 </head>
@@ -127,7 +132,7 @@
 (() => {
   'use strict';
   const STORAGE_KEY = 'habitTrackerV1';
-  const today = isoDate(new Date());
+  let today = isoDate(new Date());
 
   function defaultHabitDefinitions(){
     return [
@@ -169,7 +174,9 @@
       baselines:[{effectiveDate:today,wake:'07:00',bed:'22:30'}],
       habits:defaultHabitDefinitions(),
       exercises:[],
-      workouts:{}
+      workouts:{},
+      durationSessions:{},
+      activeTimer:null
     };
   }
 
@@ -183,7 +190,9 @@
         baselines: Array.isArray(parsed.baselines) && parsed.baselines.length ? parsed.baselines : [{effectiveDate:today,wake:'07:00',bed:'22:30'}],
         habits: Array.isArray(parsed.habits) && parsed.habits.length ? parsed.habits : defaultHabitDefinitions(),
         exercises: Array.isArray(parsed.exercises) ? parsed.exercises : [],
-        workouts: parsed.workouts || {}
+        workouts: parsed.workouts || {},
+        durationSessions: parsed.durationSessions || {},
+        activeTimer: parsed.activeTimer || null
       };
     }catch(e){ return defaultData(); }
   }
@@ -191,21 +200,29 @@
   function isoDate(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
   function fmtDate(s){ const [y,m,d]=s.split('-'); return `${Number(m)}/${Number(d)}`; }
   function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('show'),1400); }
+  function syncToday(){
+    const now=isoDate(new Date()); if(now===today)return;
+    const previous=today; today=now;
+    selectedDateInput.max=today; $('#effectiveDate').min=today;
+    if(selectedDate===previous){selectedDate=today;selectedDateInput.value=today;}
+  }
   function getDay(date){ if(!data.entries[date]) data.entries[date]={}; return data.entries[date]; }
   function getBaselineFor(date){
     const candidates=data.baselines.filter(b=>b.effectiveDate<=date).sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));
     return candidates[candidates.length-1] || data.baselines.slice().sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate))[0];
   }
   function minutes(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
-  function wakeDelay(actual, base){ return Math.max(0, minutes(actual)-minutes(base)); }
-  function bedDelay(actual, base){
-    let a=minutes(actual), b=minutes(base);
-    let diff=a-b;
-    // 例: 基準22:30に対する00:30は翌日扱いで +120分。
+  function wakeDifference(actual, base){ return minutes(actual)-minutes(base); }
+  function bedDifference(actual, base){
+    let diff=minutes(actual)-minutes(base);
+    // 就寝は日付またぎを考慮し、基準から最も近い方向の差分（±12時間以内）にする。
     if(diff < -720) diff += 1440;
-    return Math.max(0, diff);
+    if(diff > 720) diff -= 1440;
+    return diff;
   }
-  function durationLabel(v){ const n=Number(v)||0,h=Math.floor(n/60),m=n%60; return h ? `${h}時間${m?`${m}分`:''}` : `${m}分`; }
+  function sleepDifference(kind, actual, base){ return kind==='wake' ? wakeDifference(actual,base) : bedDifference(actual,base); }
+  function signedMinutesLabel(v){ const n=Number(v)||0; return `${n>0?'+':''}${n}分`; }
+  function durationLabel(v){ const n=Math.max(0,Math.round(Number(v)||0)),h=Math.floor(n/60),m=n%60; return h ? `${h}時間${m?`${m}分`:''}` : `${m}分`; }
   function entryLabel(habit, value){
     if(value===undefined || value===null || value==='') return '未記録';
     if(habit.kind==='duration') return durationLabel(value);
@@ -221,10 +238,96 @@
   }
   function validSet(s){ return (Number(s.reps)||0)>0 && (s.weight===undefined || s.weight===null || Number(s.weight)>=0); }
 
+  function sessionBucket(date, habitId, create=false){
+    if(create){
+      if(!data.durationSessions[date]) data.durationSessions[date]={};
+      if(!data.durationSessions[date][habitId]) data.durationSessions[date][habitId]=[];
+    }
+    return data.durationSessions[date]?.[habitId] || [];
+  }
+  function addDurationMinutes(date,habitId,mins,kind='manual'){
+    const amount=Math.max(0,Math.round(Number(mins)||0)); if(!amount)return;
+    const day=getDay(date); day[habitId]=Math.max(0,Number(day[habitId]||0))+amount;
+    sessionBucket(date,habitId,true).push({id:'ds_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),kind,minutes:amount});
+  }
+  function setDurationTotal(date,habitId,mins){
+    const amount=Math.max(0,Math.round(Number(mins)||0)); const day=getDay(date);
+    if(amount>0) day[habitId]=amount; else delete day[habitId];
+    if(!data.durationSessions[date]) data.durationSessions[date]={};
+    data.durationSessions[date][habitId]=amount?[{id:'ds_'+Date.now(),kind:'set',minutes:amount}]:[];
+  }
+  function deleteDurationSession(date,habitId,sessionId){
+    const arr=sessionBucket(date,habitId); const idx=arr.findIndex(s=>s.id===sessionId); if(idx<0)return;
+    const mins=Math.max(0,Number(arr[idx].minutes)||0); arr.splice(idx,1);
+    const day=getDay(date), next=Math.max(0,Number(day[habitId]||0)-mins);
+    if(next>0) day[habitId]=next; else delete day[habitId];
+  }
+  function timerElapsedMs(timer,now=Date.now()){
+    if(!timer)return 0;
+    let total=(timer.segments||[]).reduce((sum,s)=>sum+Math.max(0,(Number(s.end)||0)-(Number(s.start)||0)),0);
+    if(timer.startedAt) total+=Math.max(0,now-Number(timer.startedAt));
+    return total;
+  }
+  function timerClock(ms){
+    const totalMinutes=Math.floor(Math.max(0,ms)/60000),h=Math.floor(totalMinutes/60),m=totalMinutes%60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+  function splitTimerSegmentsByDay(segments){
+    const byDate={};
+    segments.forEach(seg=>{
+      let cursor=Number(seg.start), end=Number(seg.end);
+      while(cursor<end){
+        const d=new Date(cursor), nextMidnight=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();
+        const partEnd=Math.min(end,nextMidnight), date=isoDate(d);
+        byDate[date]=(byDate[date]||0)+(partEnd-cursor);
+        cursor=partEnd;
+      }
+    });
+    const rows=Object.entries(byDate).map(([date,ms])=>({date,ms,base:Math.floor(ms/60000),fraction:(ms/60000)%1}));
+    const target=Math.round(rows.reduce((sum,r)=>sum+r.ms,0)/60000);
+    let assigned=rows.reduce((sum,r)=>sum+r.base,0), left=Math.max(0,target-assigned);
+    rows.slice().sort((a,b)=>b.fraction-a.fraction).forEach(r=>{ if(left>0){r.base+=1;left--;} });
+    return rows.map(r=>({date:r.date,minutes:r.base})).filter(r=>r.minutes>0);
+  }
+  function activeTimerFor(habitId){ return data.activeTimer && data.activeTimer.habitId===habitId ? data.activeTimer : null; }
+  function startDurationTimer(habitId){
+    syncToday();
+    if(selectedDate!==today){toast('タイマーは今日の記録で開始してください');return;}
+    if(data.activeTimer){toast('別のタイマーが動作中です');return;}
+    data.activeTimer={habitId,startedAt:Date.now(),segments:[]}; persist(); renderHabitEditor(); renderHome();
+  }
+  function pauseDurationTimer(habitId){
+    const t=activeTimerFor(habitId); if(!t||!t.startedAt)return;
+    t.segments=t.segments||[]; t.segments.push({start:Number(t.startedAt),end:Date.now()}); t.startedAt=null; persist(); renderHabitEditor(); renderHome();
+  }
+  function resumeDurationTimer(habitId){
+    const t=activeTimerFor(habitId); if(!t||t.startedAt)return;
+    t.startedAt=Date.now(); persist(); renderHabitEditor(); renderHome();
+  }
+  function finishDurationTimer(habitId){
+    const t=activeTimerFor(habitId); if(!t)return;
+    if(t.startedAt){t.segments=t.segments||[];t.segments.push({start:Number(t.startedAt),end:Date.now()});t.startedAt=null;}
+    const allocations=splitTimerSegmentsByDay(t.segments||[]);
+    data.activeTimer=null;
+    allocations.forEach(x=>addDurationMinutes(x.date,habitId,x.minutes,'timer'));
+    persist(); renderHabitEditor(); renderHabitChart(); renderHome();
+    toast(allocations.length?'計測時間を追加しました':'1分未満のため記録しませんでした');
+  }
+  let timerUiInterval=null;
+  function updateTimerUi(){
+    const el=$('#timerDisplay'); if(!el||!currentHabit||currentHabit.kind!=='duration')return;
+    const t=activeTimerFor(currentHabit.id); el.textContent=t?timerClock(timerElapsedMs(t)):'00:00';
+  }
+  function ensureTimerUiLoop(){
+    if(timerUiInterval)clearInterval(timerUiInterval);
+    updateTimerUi(); timerUiInterval=setInterval(()=>{updateTimerUi(); if(data.activeTimer)renderHome();},1000);
+  }
+
   function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $('#'+id).classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
   function updateNav(which){ $('#navHome').classList.toggle('active',which==='home'); $('#navSettings').classList.toggle('active',which==='settings'); }
 
   function renderHome(){
+    syncToday();
     const list=$('#habitList'); list.innerHTML=''; const day=getDay(selectedDate);
     data.habits.forEach(h=>{
       const b=document.createElement('button'); b.type='button'; b.className='row';
@@ -233,7 +336,12 @@
       if(h.kind==='workout'){
         const s=workoutSummary(selectedDate); value.textContent=s.ex?`${s.ex}種目・${s.sets}セット`:'未記録'; if(!s.ex)value.classList.add('muted');
       }else{
-        const v=day[h.id]; value.textContent=entryLabel(h,v); if(v===undefined)value.classList.add('muted');
+        const v=day[h.id];
+        if(h.kind==='duration' && activeTimerFor(h.id)){
+          const t=activeTimerFor(h.id); value.textContent=`${t.startedAt?'計測中':'一時停止'} ${timerClock(timerElapsedMs(t))}`;
+        }else{
+          value.textContent=entryLabel(h,v); if(v===undefined)value.classList.add('muted');
+        }
       }
       b.append(left,value);
       b.addEventListener('click',()=> h.kind==='workout' ? openWorkout() : openHabit(h));
@@ -255,11 +363,67 @@
     }
 
     if(h.kind==='duration'){
-      const current=Number(day[h.id]||0), two=document.createElement('div'); two.className='two';
-      const hField=fieldSelect('時間','hourSel',Array.from({length:13},(_,i)=>({v:i,t:`${i}時間`})),Math.floor(current/60));
+      const current=Number(day[h.id]||0);
+      const total=document.createElement('div'); total.className='summary'; total.innerHTML=`<span class="help">この日の合計</span><b>${durationLabel(current)}</b>`; card.appendChild(total);
+
+      const manualTitle=document.createElement('h3'); manualTitle.style.marginTop='18px'; manualTitle.textContent='手動で入力'; card.appendChild(manualTitle);
+      const two=document.createElement('div'); two.className='two';
+      const hField=fieldSelect('時間','hourSel',Array.from({length:13},(_,i)=>({v:i,t:`${i}時間`})),0);
       const mOptions=[]; for(let m=0;m<60;m+=5)mOptions.push({v:m,t:`${m}分`});
-      const mField=fieldSelect('分','minuteSel',mOptions,current%60); two.append(hField.wrap,mField.wrap); card.appendChild(two);
-      const save=makeButton('保存','primary'); save.style.width='100%'; save.addEventListener('click',()=>{ day[h.id]=Number(hField.select.value)*60+Number(mField.select.value); persist(); renderHabitChart(); renderHome(); toast('保存しました'); }); card.appendChild(save);
+      const mField=fieldSelect('分','minuteSel',mOptions,0); two.append(hField.wrap,mField.wrap); card.appendChild(two);
+      const manualActions=document.createElement('div'); manualActions.className='actions';
+      const add=makeButton('＋ この時間を追加','primary');
+      const set=makeButton('合計をこの時間にする');
+      add.addEventListener('click',()=>{const mins=Number(hField.select.value)*60+Number(mField.select.value);if(!mins){toast('追加する時間を選んでください');return;}addDurationMinutes(selectedDate,h.id,mins,'manual');persist();renderHabitEditor();renderHabitChart();renderHome();toast('追加しました');});
+      set.addEventListener('click',()=>{const mins=Number(hField.select.value)*60+Number(mField.select.value);setDurationTotal(selectedDate,h.id,mins);persist();renderHabitEditor();renderHabitChart();renderHome();toast('合計を更新しました');});
+      manualActions.append(add,set); card.appendChild(manualActions);
+
+      const timerPanel=document.createElement('div'); timerPanel.className='timer-panel';
+      const timerTitle=document.createElement('h3'); timerTitle.textContent='タイマー'; timerPanel.appendChild(timerTitle);
+      const timerDisplay=document.createElement('div'); timerDisplay.id='timerDisplay'; timerDisplay.className='timer-display'; timerDisplay.textContent='00:00'; timerPanel.appendChild(timerDisplay);
+      const active=data.activeTimer, own=activeTimerFor(h.id);
+      const status=document.createElement('div'); status.className='timer-status';
+      if(own) status.textContent=own.startedAt?'計測中です':'一時停止中です';
+      else if(active) status.textContent=`「${data.habits.find(x=>x.id===active.habitId)?.label||'別の習慣'}」を計測中です`;
+      else status.textContent=selectedDate===today?'開始すると、アプリを閉じても開始時刻から計算します':'過去日はタイマーを開始できません';
+      timerPanel.appendChild(status);
+      const timerActions=document.createElement('div'); timerActions.className='actions';
+      if(!active){
+        const start=makeButton('▶ 開始','primary'); start.disabled=selectedDate!==today; start.addEventListener('click',()=>startDurationTimer(h.id)); timerActions.appendChild(start);
+      }else if(own){
+        if(own.startedAt){
+          const pause=makeButton('Ⅱ 一時停止'); pause.addEventListener('click',()=>pauseDurationTimer(h.id)); timerActions.appendChild(pause);
+        }else{
+          const resume=makeButton('▶ 再開','primary'); resume.addEventListener('click',()=>resumeDurationTimer(h.id)); timerActions.appendChild(resume);
+        }
+        const finish=makeButton('■ 終了','danger'); finish.addEventListener('click',()=>finishDurationTimer(h.id)); timerActions.appendChild(finish);
+      }else{
+        const blocked=makeButton('他のタイマーが動作中'); blocked.disabled=true; timerActions.appendChild(blocked);
+      }
+      timerPanel.appendChild(timerActions); card.appendChild(timerPanel);
+
+      const sessions=sessionBucket(selectedDate,h.id);
+      const history=document.createElement('div'); history.className='timer-panel';
+      const historyTitle=document.createElement('h3'); historyTitle.textContent='この日の追加履歴'; history.appendChild(historyTitle);
+      const tracked=sessions.reduce((sum,s)=>sum+(Number(s.minutes)||0),0), legacy=Math.max(0,current-tracked);
+      if(!sessions.length && !legacy){
+        const empty=document.createElement('div'); empty.className='empty'; empty.textContent='まだ追加履歴がありません'; history.appendChild(empty);
+      }else{
+        const list=document.createElement('div'); list.className='session-list';
+        if(legacy){
+          const row=document.createElement('div'); row.className='session-row'; row.innerHTML=`<span>以前の記録</span><b>${durationLabel(legacy)}</b>`; list.appendChild(row);
+        }
+        sessions.forEach(s=>{
+          const row=document.createElement('div'); row.className='session-row';
+          const label=document.createElement('span'); label.textContent=s.kind==='timer'?'タイマー':s.kind==='set'?'手動設定':'手動追加';
+          const amount=document.createElement('b'); amount.textContent=durationLabel(s.minutes);
+          const del=document.createElement('button'); del.type='button'; del.textContent='削除'; del.addEventListener('click',()=>{deleteDurationSession(selectedDate,h.id,s.id);persist();renderHabitEditor();renderHabitChart();renderHome();toast('追加分を削除しました');});
+          row.append(label,amount,del); list.appendChild(row);
+        });
+        history.appendChild(list);
+      }
+      card.appendChild(history);
+      ensureTimerUiLoop();
     }
 
     if(h.kind==='weight'){
@@ -270,13 +434,13 @@
     if(h.kind==='wake' || h.kind==='bed'){
       const base=getBaselineFor(selectedDate); const existing=day[h.id];
       const f=document.createElement('div'); f.className='field'; f.innerHTML=`<label>${h.kind==='wake'?'起床':'就寝'}時刻</label>`; const inp=document.createElement('input'); inp.type='time'; inp.value=existing?.time||''; f.appendChild(inp); card.appendChild(f);
-      const info=document.createElement('p'); info.className='help'; info.textContent=`この日の基準：${h.kind==='wake'?base.wake:base.bed}。基準より早い場合は差分 0 分として扱います。`; card.appendChild(info);
-      const save=makeButton('保存','primary'); save.style.width='100%'; save.addEventListener('click',()=>{ if(!inp.value){toast('時刻を入力してください');return;} const active=getBaselineFor(selectedDate); const baseline=h.kind==='wake'?active.wake:active.bed; const delay=h.kind==='wake'?wakeDelay(inp.value,baseline):bedDelay(inp.value,baseline); day[h.id]={time:inp.value,baseline,delay}; persist(); renderHabitEditor();renderHabitChart();renderHome();toast('保存しました'); }); card.appendChild(save);
-      if(existing?.time){ const pill=document.createElement('div'); pill.style.marginTop='10px'; pill.innerHTML=`<span class="pill">基準超過 ${existing.delay||0}分</span>`; card.appendChild(pill); }
+      const info=document.createElement('p'); info.className='help'; info.textContent=`この日の基準：${h.kind==='wake'?base.wake:base.bed}。基準より早い場合は負、遅い場合は正の差分で表示します。`; card.appendChild(info);
+      const save=makeButton('保存','primary'); save.style.width='100%'; save.addEventListener('click',()=>{ if(!inp.value){toast('時刻を入力してください');return;} const active=getBaselineFor(selectedDate); const baseline=h.kind==='wake'?active.wake:active.bed; const diff=sleepDifference(h.kind,inp.value,baseline); day[h.id]={time:inp.value,baseline,diff}; persist(); renderHabitEditor();renderHabitChart();renderHome();toast('保存しました'); }); card.appendChild(save);
+      if(existing?.time){ const baseline=existing.baseline || (h.kind==='wake'?base.wake:base.bed); const diff=sleepDifference(h.kind,existing.time,baseline); const pill=document.createElement('div'); pill.style.marginTop='10px'; pill.innerHTML=`<span class="pill">基準との差 ${signedMinutesLabel(diff)}</span>`; card.appendChild(pill); }
     }
 
     if(day[h.id]!==undefined){
-      const del=makeButton('この日の記録を削除','danger'); del.style.width='100%'; del.style.marginTop='8px'; del.addEventListener('click',()=>{ delete day[h.id];persist();renderHabitEditor();renderHabitChart();renderHome();toast('削除しました'); }); card.appendChild(del);
+      const del=makeButton('この日の記録を削除','danger'); del.style.width='100%'; del.style.marginTop='8px'; del.addEventListener('click',()=>{ delete day[h.id]; if(h.kind==='duration' && data.durationSessions[selectedDate]) delete data.durationSessions[selectedDate][h.id]; persist();renderHabitEditor();renderHabitChart();renderHome();toast('削除しました'); }); card.appendChild(del);
     }
     box.appendChild(card);
   }
@@ -287,7 +451,12 @@
   function habitSeries(h){
     const dates=lastNDates(selectedDate,30); return dates.map(date=>{
       const v=data.entries[date]?.[h.id]; let y=null;
-      if(v!==undefined){ if(h.kind==='wake'||h.kind==='bed') y=Number(v.delay||0); else y=Number(v); }
+      if(v!==undefined){
+        if(h.kind==='wake'||h.kind==='bed'){
+          if(v && v.time && v.baseline) y=sleepDifference(h.kind,v.time,v.baseline);
+          else y=Number(v?.diff ?? v?.delay ?? 0);
+        }else y=Number(v);
+      }
       return {date,y};
     });
   }
@@ -298,7 +467,12 @@
   function lastNDates(endDate,n){ const [y,m,d]=endDate.split('-').map(Number), end=new Date(y,m-1,d),out=[]; for(let i=n-1;i>=0;i--){const x=new Date(end);x.setDate(end.getDate()-i);out.push(isoDate(x));}return out; }
   function chartHTML(series,unit,fixed,caption){
     const values=series.filter(p=>p.y!==null&&Number.isFinite(p.y)).map(p=>p.y); if(!values.length)return `<div class="empty">まだ記録がありません</div><div class="legend"><span>${caption}</span><span>${unit}</span></div>`;
-    let min=fixed?fixed.min:Math.min(...values), max=fixed?fixed.max:Math.max(...values); if(min===max){ if(min===0)max=1; else{min=Math.max(0,min*.9);max=max*1.1;} }
+    let min=fixed?fixed.min:Math.min(...values), max=fixed?fixed.max:Math.max(...values);
+    if(min===max){
+      if(min===0)max=1;
+      else if(min>0){min=min*.9;max=max*1.1;}
+      else{min=min*1.1;max=max*.9;}
+    }
     if(!fixed && min>0)min=Math.max(0,min-(max-min)*.15); const W=620,H=240,L=44,R=16,T=14,B=42, pw=W-L-R,ph=H-T-B;
     const x=i=>L+(series.length===1?0:pw*i/(series.length-1)); const y=v=>T+ph-(v-min)/(max-min)*ph;
     let svg=`<div class="chart-wrap"><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="日別推移グラフ">`;
@@ -371,9 +545,11 @@
   }
   function deleteHabit(id){
     const h=data.habits.find(x=>x.id===id); if(!h || h.locked)return;
+    if(activeTimerFor(id)){toast('計測中のタイマーを終了してから削除してください');return;}
     if(!confirm(`「${h.label}」を削除しますか？\nこの習慣の過去の記録も削除されます。`))return;
     data.habits=data.habits.filter(x=>x.id!==id);
     Object.values(data.entries).forEach(day=>{ if(day && Object.prototype.hasOwnProperty.call(day,id)) delete day[id]; });
+    Object.values(data.durationSessions).forEach(day=>{ if(day && Object.prototype.hasOwnProperty.call(day,id)) delete day[id]; });
     persist(); renderHabitManagement(); renderHome(); toast('習慣を削除しました');
   }
 
@@ -408,9 +584,10 @@
   $('#saveBaseline').addEventListener('click',()=>{const effectiveDate=$('#effectiveDate').value,wake=$('#wakeBase').value,bed=$('#bedBase').value;if(!effectiveDate||!wake||!bed){toast('すべて入力してください');return;}if(effectiveDate<today){toast('過去日は指定できません');return;} const existing=data.baselines.find(b=>b.effectiveDate===effectiveDate);if(existing){existing.wake=wake;existing.bed=bed;}else data.baselines.push({effectiveDate,wake,bed});data.baselines.sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));persist();renderBaselines();toast('基準を保存しました');});
 
   function exportBackup(){
+    if(data.activeTimer){toast('タイマーを終了してからバックアップしてください');return;}
     const payload={
       app:'habit-tracker',
-      version:3,
+      version:4,
       exportedAt:new Date().toISOString(),
       data
     };
@@ -442,7 +619,9 @@
       baselines:candidate.baselines,
       habits:candidate.habits,
       exercises:candidate.exercises,
-      workouts:candidate.workouts
+      workouts:candidate.workouts,
+      durationSessions:candidate.durationSessions || {},
+      activeTimer:null
     };
     persist();
     selectedDate=today;
@@ -471,6 +650,9 @@
   });
 
   function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+
+  window.addEventListener('focus',()=>{syncToday();renderHome();updateTimerUi();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncToday();renderHome();updateTimerUi();}});
 
   renderHome();
   renderHabitManagement();

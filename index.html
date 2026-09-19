@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f7f5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="習慣トラッカー" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>習慣トラッカー</title>
+  <style>
+    :root{
+      --bg:#f7f7f5;--card:#ffffff;--text:#1e1f22;--muted:#74777d;--line:#dcdedb;
+      --accent:#2f6d4d;--accent-soft:#e7f1eb;--danger:#a63f3f;--shadow:0 1px 2px rgba(0,0,0,.05)
+    }
+    *{box-sizing:border-box}
+    html{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif}
+    body{margin:0;min-height:100vh;background:var(--bg)}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:760px;margin:0 auto;padding:env(safe-area-inset-top) 14px calc(92px + env(safe-area-inset-bottom))}
+    .top{padding:18px 2px 12px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+    h1{font-size:24px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:3px}
+    .datebox{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 10px;min-height:44px}
+    .section-title{font-size:13px;color:var(--muted);margin:18px 4px 8px;font-weight:700;letter-spacing:.02em}
+    .list{display:grid;gap:8px}.row{width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;min-height:62px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;box-shadow:var(--shadow)}
+    .row strong{display:block;font-size:16px}.row small{display:block;color:var(--muted);margin-top:2px}.value{font-weight:700;text-align:right;white-space:nowrap}.value.muted{color:var(--muted);font-weight:600}
+    .pill{display:inline-flex;align-items:center;gap:5px;background:var(--accent-soft);color:var(--accent);padding:5px 8px;border-radius:999px;font-size:12px;font-weight:700}
+    .screen{display:none}.screen.active{display:block}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 0 10px}.toolbar h2{font-size:20px;margin:0;min-width:0;overflow-wrap:anywhere}
+    .btn{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:11px;min-height:44px;padding:9px 12px;font-weight:700}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.danger{color:var(--danger)}
+    .card{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--shadow);margin-bottom:12px}.card h3{font-size:16px;margin:0 0 10px}.help{font-size:13px;color:var(--muted);line-height:1.55}
+    .score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.score-btn{min-height:54px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:20px;font-weight:800}.score-btn.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+    .field{display:grid;gap:6px;margin-bottom:10px}.field label{font-size:13px;color:var(--muted);font-weight:700}.field input,.field select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);padding:10px 12px;font-size:16px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{flex:1}
+    .chart-wrap{overflow-x:auto}.chart{display:block;width:100%;min-width:560px;height:auto}.chart text{fill:var(--muted);font-size:11px}.chart .grid{stroke:var(--line);stroke-width:1}.chart .line{fill:none;stroke:var(--accent);stroke-width:3}.chart .dot{fill:var(--accent)}.chart .zero{stroke:#777;stroke-width:1;stroke-dasharray:4 4}
+    .legend{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .set-head,.set-row{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) 44px;gap:7px;align-items:center}.set-head.body,.set-row.body{grid-template-columns:34px minmax(0,1fr) 44px}.set-head{font-size:12px;color:var(--muted);padding:0 3px 4px}.set-row{margin-bottom:7px}.set-row input{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 9px;font-size:16px;background:#fff}.set-no{color:var(--muted);font-size:13px;text-align:center}.icon-btn{min-height:44px;border:1px solid var(--line);background:#fff;border-radius:10px}.summary{display:flex;justify-content:space-between;gap:12px;align-items:end;padding-top:10px;border-top:1px solid var(--line);margin-top:10px}.summary b{font-size:22px}
+    .exercise-row{display:flex;gap:8px;align-items:stretch}.exercise-row .row{flex:1}.tiny{width:48px;flex:0 0 48px;border:1px solid var(--line);background:#fff;border-radius:12px;font-weight:800}
+    .settings-item{padding:10px 0;border-bottom:1px solid var(--line)}.settings-item:last-child{border-bottom:0}.settings-item b{display:block}.settings-item span{font-size:13px;color:var(--muted)}
+    .cloud-status{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.cloud-status b{font-size:14px}.cloud-meta{font-size:13px;color:var(--muted);line-height:1.6}.cloud-ok{color:var(--accent);font-weight:700}.cloud-warn{color:var(--danger);font-weight:700}
+    .nav{position:fixed;left:0;right:0;bottom:0;background:rgba(247,247,245,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 14px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav-inner{max-width:760px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}.nav button{min-height:50px;border:0;border-radius:12px;background:transparent;font-weight:800;color:var(--muted)}.nav button.active{background:var(--card);color:var(--accent);border:1px solid var(--line)}
+    .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1f2321;color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:30;white-space:nowrap}.toast.show{opacity:1}
+    .empty{padding:18px;text-align:center;color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:12px}
+    .timer-panel{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+    .timer-display{font-variant-numeric:tabular-nums;font-size:34px;font-weight:800;letter-spacing:.02em;text-align:center;padding:12px 0 14px}
+    .timer-status{text-align:center;color:var(--muted);font-size:13px;margin-top:-8px;margin-bottom:10px}
+    .session-list{display:grid;gap:7px;margin-top:10px}.session-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#fff}
+    .session-row span{font-size:13px}.session-row b{font-size:14px}.session-row button{min-height:36px;border:1px solid var(--line);background:#fff;border-radius:9px;color:var(--danger);font-weight:700}
+
+    .daily-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}.metric span{display:block;font-size:12px;color:var(--muted);font-weight:700}.metric b{display:block;font-size:22px;margin-top:3px}
+    .global-timer{position:fixed;left:10px;right:10px;bottom:calc(78px + env(safe-area-inset-bottom));max-width:740px;margin:auto;z-index:26;border:1px solid var(--accent);background:var(--card);border-radius:14px;padding:10px 12px;box-shadow:0 4px 18px rgba(0,0,0,.13);display:flex;align-items:center;justify-content:space-between;gap:10px}.global-timer[hidden]{display:none}.global-timer-main{min-width:0}.global-timer-main b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.global-timer-main span{display:block;color:var(--muted);font-size:12px;margin-top:2px}.global-timer-time{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px;white-space:nowrap}
+    .muscle-table-wrap{overflow-x:auto}.muscle-table{border-collapse:collapse;min-width:620px;width:100%;font-size:12px}.muscle-table th,.muscle-table td{border:1px solid var(--line);padding:7px 6px;text-align:center}.muscle-table th{background:#fafafa;position:sticky;top:0}.muscle-table td:first-child,.muscle-table th:first-child{text-align:left;white-space:nowrap}.done-mark{color:var(--accent);font-weight:800}.not-done-mark{color:var(--muted)}
+    .group-block{margin-top:16px}.group-heading{display:flex;align-items:center;justify-content:space-between;margin:0 4px 7px}.group-heading b{font-size:14px}.group-heading span{font-size:12px;color:var(--muted)}
+    .task-add{display:flex;gap:8px}.task-add input{flex:1;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:11px;padding:9px 11px;font-size:16px}.task-list{display:grid;gap:7px;margin-top:10px}.task-row{display:grid;grid-template-columns:44px minmax(0,1fr) 52px;gap:7px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;background:#fff}.task-row.done .task-title{text-decoration:line-through;color:var(--muted)}.task-check,.task-delete{min-height:40px;border:1px solid var(--line);border-radius:9px;background:#fff;font-weight:800}.task-check.checked{background:var(--accent-soft);color:var(--accent)}.task-delete{color:var(--danger)}.task-section-label{font-size:12px;color:var(--muted);font-weight:700;margin-top:14px}
+    .session-info{min-width:0;flex:1}.session-info span{display:block}.session-time{font-weight:700;margin-top:2px}.session-actions{display:flex;gap:5px}.session-actions button{min-height:34px;padding:5px 8px}
+    .chart-stack{display:grid;gap:12px}.mini-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.mini-summary .metric b{font-size:18px}
+    .calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.calendar-head b{font-size:17px}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.calendar-weekday{text-align:center;font-size:11px;color:var(--muted);font-weight:700;padding:5px 0}.calendar-day{position:relative;min-height:58px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px;text-align:left}.calendar-day.out{opacity:.38}.calendar-day.selected{border:2px solid var(--accent);padding:5px}.calendar-day.today .day-num{color:var(--accent);font-weight:800}.day-num{font-size:12px}.event-count{display:block;margin-top:6px;font-size:11px;color:var(--accent);font-weight:700}.event-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-top:7px}.event-row span{font-size:13px}.event-row button{min-height:34px;border:1px solid var(--line);background:#fff;color:var(--danger);border-radius:8px;font-weight:700}
+    @media(max-width:430px){.app{padding-left:10px;padding-right:10px}.top{align-items:flex-start;flex-direction:column}.datebox{width:100%}.two{grid-template-columns:1fr 1fr}.row{padding:11px 12px}.toolbar h2{font-size:18px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <section id="homeScreen" class="screen active">
+    <div class="top">
+      <div><h1>習慣トラッカー</h1><div class="sub">終わったものから記録</div></div>
+      <input id="selectedDate" class="datebox" type="date" />
+    </div>
+    <div id="dailySummary" class="card"></div>
+    <div id="habitList" class="list"></div>
+  </section>
+
+  <section id="detailScreen" class="screen">
+    <div class="toolbar"><button id="detailBack" class="btn" type="button">← 戻る</button><h2 id="detailTitle"></h2><span></span></div>
+    <div id="detailEditor"></div>
+    <div class="card"><h3>日別推移</h3><div id="detailChart"></div></div>
+  </section>
+
+  <section id="workoutScreen" class="screen">
+    <div class="toolbar"><button id="workoutBack" class="btn" type="button">← 戻る</button><h2>筋トレ</h2><button id="showAddExercise" class="btn primary" type="button">＋ 種目</button></div>
+    <div id="workoutDaySummary" class="card"></div>
+    <div class="card"><h3>直近7日の部位</h3><div id="muscleHistory"></div></div>
+    <div id="addExerciseCard" class="card" hidden>
+      <h3>種目を追加</h3>
+      <div class="field"><label for="exerciseName">種目名</label><input id="exerciseName" placeholder="例：ベンチプレス" /></div>
+      <div class="field"><label for="exerciseType">種類</label><select id="exerciseType"><option value="weighted">重量種目</option><option value="bodyweight">自重種目</option></select></div>
+      <div class="field"><label for="exerciseMuscleGroup">部位</label><select id="exerciseMuscleGroup"><option value="胸">胸</option><option value="背中">背中</option><option value="肩">肩</option><option value="腕">腕</option><option value="脚">脚</option><option value="腹">腹</option></select></div>
+      <div class="actions"><button id="cancelAddExercise" class="btn" type="button">キャンセル</button><button id="addExercise" class="btn primary" type="button">追加</button></div>
+    </div>
+    <div id="exerciseList" class="list"></div>
+  </section>
+
+  <section id="exerciseScreen" class="screen">
+    <div class="toolbar"><button id="exerciseBack" class="btn" type="button">← 種目一覧</button><h2 id="exerciseTitle"></h2><button id="renameExercise" class="btn" type="button">編集</button></div>
+    <div class="card">
+      <h3 id="exerciseDateLabel">今日のセット</h3>
+      <div id="setHeader"></div>
+      <div id="sets"></div>
+      <button id="addSet" class="btn" type="button" style="width:100%;margin-top:4px">＋ セット</button>
+      <div class="mini-summary">
+        <div class="metric"><span id="volumeLabel">総ボリューム</span><b id="volumeValue">0</b></div>
+        <div class="metric"><span id="maxSetLabel">最大セットボリューム</span><b id="maxSetValue">0</b></div>
+      </div>
+      <div class="actions" style="margin-top:12px"><button id="saveSets" class="btn primary" type="button">この日の記録を保存</button></div>
+    </div>
+    <div class="chart-stack">
+      <div class="card"><h3 id="exerciseChartTitle">実施日の推移</h3><div id="exerciseChart"></div></div>
+      <div class="card"><h3 id="exerciseMaxChartTitle">最大セットの推移</h3><div id="exerciseMaxChart"></div></div>
+      <div class="card"><h3>週ごとの合計</h3><div id="exerciseWeekChart"></div></div>
+      <div class="card"><h3>月ごとの合計</h3><div id="exerciseMonthChart"></div></div>
+    </div>
+  </section>
+
+
+  <section id="calendarScreen" class="screen">
+    <div class="top"><div><h1>カレンダー</h1><div class="sub">このアプリ内の予定</div></div></div>
+    <div class="card">
+      <div class="calendar-head"><button id="calendarPrev" class="btn" type="button">←</button><b id="calendarMonthLabel"></b><button id="calendarNext" class="btn" type="button">→</button></div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </div>
+    <div class="card">
+      <h3 id="calendarDateLabel">予定</h3>
+      <div class="field"><label for="calendarEventTitle">予定</label><input id="calendarEventTitle" maxlength="80" placeholder="例：ゼミ、歯医者" /></div>
+      <div class="field"><label for="calendarEventTime">時刻（任意）</label><input id="calendarEventTime" type="time" /></div>
+      <button id="calendarAddEvent" class="btn primary" type="button" style="width:100%">予定を追加</button>
+      <div id="calendarEventList" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <section id="settingsScreen" class="screen">
+    <div class="top"><div><h1>設定</h1><div class="sub">習慣の追加・削除と睡眠基準を管理</div></div></div>
+    <div class="card">
+      <h3>習慣を追加</h3>
+      <div class="field"><label for="newHabitName">習慣名</label><input id="newHabitName" placeholder="例：英語学習" maxlength="40" /></div>
+      <div class="field"><label for="newHabitKind">記録方式</label><select id="newHabitKind"><option value="duration">作業時間（○時間○分）</option><option value="score">0 / 1 / 2</option></select></div>
+      <button id="addHabit" class="btn primary" type="button" style="width:100%">習慣を追加</button>
+      <p class="help">追加した習慣はホームの一番下に表示します。0 / 1 / 2 は既存項目と同じく、0 = できなかった、1 = まあまあ / 一部できた、2 = できた、です。</p>
+    </div>
+    <div class="card"><h3>習慣を管理</h3><div id="habitManagement"></div><p class="help">起床時間・体重・筋トレ・就寝時刻・タスク進捗は特殊形式のため固定です。それ以外は削除できます。</p></div>
+    <div class="card">
+      <h3>睡眠基準を追加</h3>
+      <div class="field"><label for="effectiveDate">適用開始日</label><input id="effectiveDate" type="date" /></div>
+      <div class="two">
+        <div class="field"><label for="wakeBase">起床基準</label><input id="wakeBase" type="time" value="07:00" /></div>
+        <div class="field"><label for="bedBase">就寝基準</label><input id="bedBase" type="time" value="22:30" /></div>
+      </div>
+      <button id="saveBaseline" class="btn primary" type="button" style="width:100%">基準を保存</button>
+      <p class="help">今日以降の日付だけ設定できます。未来日を指定すれば、その日から新しい基準になります。</p>
+    </div>
+    <div class="card"><h3>基準履歴</h3><div id="baselineHistory"></div></div>
+    <div class="card">
+      <h3>クラウドバックアップ</h3>
+      <div id="cloudLoggedOut">
+        <div class="field"><label for="cloudEmail">メールアドレス</label><input id="cloudEmail" type="email" autocomplete="username" placeholder="Supabaseで作成したメールアドレス" /></div>
+        <div class="field"><label for="cloudPassword">パスワード</label><input id="cloudPassword" type="password" autocomplete="current-password" placeholder="パスワード" /></div>
+        <button id="cloudLogin" class="btn primary" type="button" style="width:100%">ログインして自動バックアップを有効化</button>
+      </div>
+      <div id="cloudLoggedIn" hidden>
+        <div class="cloud-status"><b id="cloudAccount">ログイン中</b><span id="cloudState" class="cloud-ok">接続確認中</span></div>
+        <div class="cloud-meta">最終クラウドバックアップ：<span id="cloudLastBackup">まだありません</span></div>
+        <div class="actions" style="margin-top:10px">
+          <button id="cloudBackupNow" class="btn primary" type="button">今すぐバックアップ</button>
+          <button id="cloudRestore" class="btn" type="button">クラウドから復元</button>
+          <button id="cloudLogout" class="btn" type="button">ログアウト</button>
+        </div>
+      </div>
+      <p class="help">ログイン後は、記録変更時にlocalStorageへ保存したうえで自動的にSupabaseへバックアップします。JSONバックアップも非常用として残します。</p>
+    </div>
+    <div class="card">
+      <h3>バックアップ</h3>
+      <div class="actions">
+        <button id="exportBackup" class="btn primary" type="button">バックアップを書き出す</button>
+        <button id="importBackup" class="btn" type="button">バックアップから復元</button>
+      </div>
+      <input id="backupFile" type="file" accept="application/json,.json" hidden />
+      <p class="help">記録・習慣・筋トレ種目・睡眠基準を1つのJSONファイルに保存します。クラウド自動バックアップとは別に、必要なときだけ「ファイル」アプリへ保存できます。復元すると現在のデータはバックアップ内容で置き換わります。</p>
+    </div>
+    <div class="card"><h3>保存について</h3><p class="help">日々の記録はこのWebアプリのブラウザ領域に保存されます。日々の記録は端末にも保存され、ログイン中はSupabaseへ自動バックアップされます。サイトデータ削除前や大きな更新前はJSONバックアップも利用できます。</p></div>
+  </section>
+</div>
+
+<div id="globalTimerBar" class="global-timer" hidden>
+  <div class="global-timer-main"><b id="globalTimerLabel">タイマー</b><span id="globalTimerStatus">計測中</span></div>
+  <div id="globalTimerTime" class="global-timer-time">00:00</div>
+  <button id="globalTimerOpen" class="btn" type="button">開く</button>
+</div>
+<nav class="nav"><div class="nav-inner" style="grid-template-columns:1fr 1fr 1fr"><button id="navHome" class="active" type="button">今日の記録</button><button id="navCalendar" type="button">カレンダー</button><button id="navSettings" type="button">設定</button></div></nav>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'habitTrackerV1';
+  const MUSCLE_GROUPS = ['胸','背中','肩','腕','脚','腹'];
+  const CLOUD_META_KEY = 'habitTrackerCloudMetaV1';
+  const SUPABASE_URL = 'https://gbljitjowsphqwiiawpr.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_vCJWSQRmV2Be4L2PB1cMTA_lCk7_DLJ';
+  const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
+  let cloudUser = null;
+  let cloudBackupTimer = null;
+  let cloudBackupPending = false;
+  let cloudBackupInFlight = false;
+  let today = isoDate(new Date());
+
+  function defaultHabitDefinitions(){
+    return [
+      {id:'wake',label:'起床時間',kind:'wake',locked:true},
+      {id:'sun',label:'朝陽',kind:'score'},
+      {id:'weight',label:'体重',kind:'weight',locked:true},
+      {id:'career',label:'進路設計',kind:'duration'},
+      {id:'research',label:'研究',kind:'duration'},
+      {id:'review',label:'反復',kind:'duration'},
+      {id:'novel',label:'新奇領域',kind:'duration'},
+      {id:'tasks',label:'タスク進捗',kind:'tasks',locked:true},
+      {id:'walk',label:'散歩',kind:'duration'},
+      {id:'workout',label:'筋トレ',kind:'workout',locked:true},
+      {id:'read',label:'読書',kind:'duration'},
+      {id:'snack',label:'Noお菓子',kind:'score'},
+      {id:'refill',label:'Noおかわり',kind:'score'},
+      {id:'massage',label:'マッサージポール',kind:'score'},
+      {id:'bed',label:'就寝時刻',kind:'bed',locked:true},
+      {id:'clean',label:'掃除',kind:'score'},
+      {id:'pressure',label:'つぼおし',kind:'score'}
+    ];
+  }
+
+  let data = loadData();
+  let selectedDate = today;
+  let currentHabit = null;
+  let currentExerciseId = null;
+  let editingSets = [];
+  let calendarSelectedDate = today;
+  let calendarMonth = today.slice(0,7);
+
+  const $ = s => document.querySelector(s);
+  const selectedDateInput = $('#selectedDate');
+  selectedDateInput.max = today;
+  selectedDateInput.value = today;
+  $('#effectiveDate').min = today;
+  $('#effectiveDate').value = today;
+
+  function defaultData(){
+    return {
+      entries:{},
+      baselines:[{effectiveDate:today,wake:'07:00',bed:'22:30'}],
+      habits:defaultHabitDefinitions(),
+      exercises:[],
+      workouts:{},
+      durationSessions:{},
+      activeTimer:null,
+      tasks:[],
+      taskScores:{},
+      calendarEvents:{}
+    };
+  }
+
+  function normalizeData(parsed){
+    const habits=Array.isArray(parsed?.habits) && parsed.habits.length ? parsed.habits.map(h=>({...h})) : defaultHabitDefinitions();
+    const bed=habits.find(h=>h.id==='bed'); if(bed)bed.label='就寝時刻';
+    if(!habits.some(h=>h.id==='tasks')){
+      const taskHabit={id:'tasks',label:'タスク進捗',kind:'tasks',locked:true};
+      const idx=habits.findIndex(h=>h.id==='walk');
+      if(idx>=0)habits.splice(idx,0,taskHabit); else habits.push(taskHabit);
+    }
+    const exercises=(Array.isArray(parsed?.exercises)?parsed.exercises:[]).map(ex=>({...ex,muscleGroup:MUSCLE_GROUPS.includes(ex.muscleGroup)?ex.muscleGroup:''}));
+    return {
+      entries: parsed?.entries || {},
+      baselines: Array.isArray(parsed?.baselines) && parsed.baselines.length ? parsed.baselines : [{effectiveDate:today,wake:'07:00',bed:'22:30'}],
+      habits,
+      exercises,
+      workouts: parsed?.workouts || {},
+      durationSessions: parsed?.durationSessions || {},
+      activeTimer: parsed?.activeTimer || null,
+      tasks: Array.isArray(parsed?.tasks) ? parsed.tasks : [],
+      taskScores: parsed?.taskScores || {},
+      calendarEvents: parsed?.calendarEvents || {}
+    };
+  }
+  function loadData(){
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      return raw ? normalizeData(JSON.parse(raw)) : defaultData();
+    }catch(e){ return defaultData(); }
+  }
+  function persist(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    scheduleCloudBackup();
+  }
+  function isoDate(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+  function fmtDate(s){ const [y,m,d]=s.split('-'); return `${Number(m)}/${Number(d)}`; }
+  function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('show'),1400); }
+  function syncToday(){
+    const now=isoDate(new Date()); if(now===today)return;
+    const previous=today; today=now;
+    selectedDateInput.max=today; $('#effectiveDate').min=today;
+    if(selectedDate===previous){selectedDate=today;selectedDateInput.value=today;}
+  }
+  function getDay(date){ if(!data.entries[date]) data.entries[date]={}; return data.entries[date]; }
+  function getBaselineFor(date){
+    const candidates=data.baselines.filter(b=>b.effectiveDate<=date).sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));
+    return candidates[candidates.length-1] || data.baselines.slice().sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate))[0];
+  }
+  function minutes(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
+  function wakeDifference(actual, base){ return minutes(actual)-minutes(base); }
+  function bedDifference(actual, base){
+    let diff=minutes(actual)-minutes(base);
+    // 就寝は日付またぎを考慮し、基準から最も近い方向の差分（±12時間以内）にする。
+    if(diff < -720) diff += 1440;
+    if(diff > 720) diff -= 1440;
+    return diff;
+  }
+  function sleepDifference(kind, actual, base){ return kind==='wake' ? wakeDifference(actual,base) : bedDifference(actual,base); }
+  function signedMinutesLabel(v){ const n=Number(v)||0; return `${n>0?'+':''}${n}分`; }
+  function durationLabel(v){ const n=Math.max(0,Math.round(Number(v)||0)),h=Math.floor(n/60),m=n%60; return h ? `${h}時間${m?`${m}分`:''}` : `${m}分`; }
+  function entryLabel(habit, value){
+    if(value===undefined || value===null || value==='') return '未記録';
+    if(habit.kind==='duration') return durationLabel(value);
+    if(habit.kind==='weight') return `${Number(value).toFixed(1)} kg`;
+    if(habit.kind==='score') return `${value} / 2`;
+    if(habit.kind==='tasks') return data.taskScores[selectedDate]===undefined?'未評価':`${data.taskScores[selectedDate]} / 2`;
+    if(habit.kind==='wake' || habit.kind==='bed') return value.time || '未記録';
+    return String(value);
+  }
+  function workoutSummary(date){
+    const day=data.workouts[date]||{}; let ex=0,sets=0;
+    Object.values(day).forEach(arr=>{ const valid=(arr||[]).filter(s=>validSet(s)); if(valid.length){ex++;sets+=valid.length;} });
+    return {ex,sets};
+  }
+  function validSet(s){ return (Number(s.reps)||0)>0 && (s.weight===undefined || s.weight===null || Number(s.weight)>=0); }
+
+  function sessionBucket(date, habitId, create=false){
+    if(create){
+      if(!data.durationSessions[date]) data.durationSessions[date]={};
+      if(!data.durationSessions[date][habitId]) data.durationSessions[date][habitId]=[];
+    }
+    return data.durationSessions[date]?.[habitId] || [];
+  }
+  function clockMinutes(hhmm){const [h,m]=String(hhmm||'').split(':').map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:null;}
+  function intervalMinutes(startTime,endTime,allowOvernight=true){
+    const a=clockMinutes(startTime),b=clockMinutes(endTime); if(a===null||b===null)return 0;
+    let diff=b-a; if(diff<=0&&allowOvernight)diff+=1440; return Math.max(0,diff);
+  }
+  function addDurationRecordedSession(date,habitId,mins,kind='manual',startTime='',endTime=''){
+    const amount=Math.max(0,Math.round(Number(mins)||0)); if(!amount)return;
+    const day=getDay(date); day[habitId]=Math.max(0,Number(day[habitId]||0))+amount;
+    sessionBucket(date,habitId,true).push({id:'ds_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),kind,minutes:amount,startTime,endTime});
+  }
+  function markDurationZero(date,habitId){
+    const day=getDay(date); day[habitId]=0;
+    if(!data.durationSessions[date])data.durationSessions[date]={};
+    data.durationSessions[date][habitId]=[];
+  }
+  function deleteDurationSession(date,habitId,sessionId){
+    const arr=sessionBucket(date,habitId); const idx=arr.findIndex(s=>s.id===sessionId); if(idx<0)return;
+    const mins=Math.max(0,Number(arr[idx].minutes)||0); arr.splice(idx,1);
+    const day=getDay(date), next=Math.max(0,Number(day[habitId]||0)-mins);
+    if(next>0) day[habitId]=next; else delete day[habitId];
+  }
+  function editDurationSession(date,habitId,sessionId){
+    const arr=sessionBucket(date,habitId),s=arr.find(x=>x.id===sessionId); if(!s)return;
+    if(!s.startTime||!s.endTime){toast('以前の記録は開始・終了時刻が保存されていません');return;}
+    const start=prompt('開始時刻（HH:MM）',s.startTime); if(start===null)return;
+    const end=prompt('終了時刻（HH:MM）',s.endTime); if(end===null)return;
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(end)){toast('時刻を HH:MM 形式で入力してください');return;}
+    const mins=intervalMinutes(start,end,true); if(!mins){toast('開始・終了時刻を確認してください');return;}
+    const old=Math.max(0,Number(s.minutes)||0); s.startTime=start; s.endTime=end; s.minutes=mins;
+    const day=getDay(date); day[habitId]=Math.max(0,Number(day[habitId]||0)-old+mins);
+    persist(); renderHabitEditor(); renderHabitChart(); renderHome(); toast('時刻を更新しました');
+  }
+  function timerElapsedMs(timer,now=Date.now()){
+    if(!timer)return 0;
+    let total=(timer.segments||[]).reduce((sum,s)=>sum+Math.max(0,(Number(s.end)||0)-(Number(s.start)||0)),0);
+    if(timer.startedAt) total+=Math.max(0,now-Number(timer.startedAt));
+    return total;
+  }
+  function timerClock(ms){
+    const totalMinutes=Math.floor(Math.max(0,ms)/60000),h=Math.floor(totalMinutes/60),m=totalMinutes%60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+  function hhmmFromMs(ms){const d=new Date(ms);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+  function splitTimerSegmentsByDay(segments){
+    const byDate={};
+    segments.forEach(seg=>{
+      let cursor=Number(seg.start),end=Number(seg.end);
+      while(cursor<end){
+        const d=new Date(cursor),nextMidnight=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();
+        const partEnd=Math.min(end,nextMidnight),date=isoDate(d);
+        if(!byDate[date])byDate[date]={ms:0,start:cursor,end:partEnd};
+        byDate[date].ms+=partEnd-cursor;byDate[date].start=Math.min(byDate[date].start,cursor);byDate[date].end=Math.max(byDate[date].end,partEnd);
+        cursor=partEnd;
+      }
+    });
+    const rows=Object.entries(byDate).map(([date,v])=>({date,ms:v.ms,start:v.start,end:v.end,base:Math.floor(v.ms/60000),fraction:(v.ms/60000)%1}));
+    const target=Math.round(rows.reduce((sum,r)=>sum+r.ms,0)/60000);let assigned=rows.reduce((sum,r)=>sum+r.base,0),left=Math.max(0,target-assigned);
+    rows.slice().sort((a,b)=>b.fraction-a.fraction).forEach(r=>{if(left>0){r.base+=1;left--;}});
+    return rows.map(r=>({date:r.date,minutes:r.base,startTime:hhmmFromMs(r.start),endTime:hhmmFromMs(r.end)})).filter(r=>r.minutes>0);
+  }
+  function activeTimerFor(habitId){ return data.activeTimer && data.activeTimer.habitId===habitId ? data.activeTimer : null; }
+  function updateAppBadge(){
+    try{
+      if(data.activeTimer&&navigator.setAppBadge)navigator.setAppBadge(1).catch(()=>{});
+      else if(!data.activeTimer&&navigator.clearAppBadge)navigator.clearAppBadge().catch(()=>{});
+    }catch(e){}
+  }
+  function startDurationTimer(habitId){
+    syncToday(); if(selectedDate!==today){toast('タイマーは今日の記録で開始してください');return;} if(data.activeTimer){toast('別のタイマーが動作中です');return;}
+    data.activeTimer={habitId,startedAt:Date.now(),segments:[]}; persist(); updateAppBadge(); updateGlobalTimerUi(); renderHabitEditor(); renderHome();
+  }
+  function pauseDurationTimer(habitId){
+    const t=activeTimerFor(habitId); if(!t||!t.startedAt)return; t.segments=t.segments||[];t.segments.push({start:Number(t.startedAt),end:Date.now()});t.startedAt=null;persist();updateGlobalTimerUi();renderHabitEditor();renderHome();
+  }
+  function resumeDurationTimer(habitId){
+    const t=activeTimerFor(habitId); if(!t||t.startedAt)return;t.startedAt=Date.now();persist();updateGlobalTimerUi();renderHabitEditor();renderHome();
+  }
+  function finishDurationTimer(habitId){
+    const t=activeTimerFor(habitId); if(!t)return;if(t.startedAt){t.segments=t.segments||[];t.segments.push({start:Number(t.startedAt),end:Date.now()});t.startedAt=null;}
+    const allocations=splitTimerSegmentsByDay(t.segments||[]);data.activeTimer=null;
+    allocations.forEach(x=>addDurationRecordedSession(x.date,habitId,x.minutes,'timer',x.startTime,x.endTime));
+    persist();updateAppBadge();updateGlobalTimerUi();renderHabitEditor();renderHabitChart();renderHome();toast(allocations.length?'計測時間を追加しました':'1分未満のため記録しませんでした');
+  }
+  let timerUiInterval=null;
+  function updateTimerUi(){
+    const el=$('#timerDisplay'); if(el&&currentHabit&&currentHabit.kind==='duration'){const t=activeTimerFor(currentHabit.id);el.textContent=t?timerClock(timerElapsedMs(t)):'00:00';}
+  }
+  function updateGlobalTimerUi(){
+    const bar=$('#globalTimerBar');if(!bar)return;const t=data.activeTimer;
+    if(!t){bar.hidden=true;document.title='習慣トラッカー';return;}
+    const habit=data.habits.find(h=>h.id===t.habitId);bar.hidden=false;$('#globalTimerLabel').textContent=habit?.label||'タイマー';$('#globalTimerStatus').textContent=t.startedAt?'計測中':'一時停止中';$('#globalTimerTime').textContent=timerClock(timerElapsedMs(t));document.title=`⏱ ${habit?.label||'タイマー'} ${timerClock(timerElapsedMs(t))}`;
+  }
+  function ensureTimerUiLoop(){
+    if(timerUiInterval)return;timerUiInterval=setInterval(()=>{updateTimerUi();updateGlobalTimerUi();},1000);updateTimerUi();updateGlobalTimerUi();
+  }
+
+  function cloudMeta(){
+    try{return JSON.parse(localStorage.getItem(CLOUD_META_KEY)||'{}')||{};}catch(e){return {};}
+  }
+  function saveCloudMeta(patch){
+    const next={...cloudMeta(),...patch};
+    localStorage.setItem(CLOUD_META_KEY,JSON.stringify(next));
+    return next;
+  }
+  function formatCloudTime(iso){
+    if(!iso)return 'まだありません';
+    const d=new Date(iso); if(Number.isNaN(d.getTime()))return iso;
+    return d.toLocaleString('ja-JP',{year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+  function setCloudState(text,kind='ok'){
+    const el=$('#cloudState'); if(!el)return; el.textContent=text; el.className=kind==='warn'?'cloud-warn':'cloud-ok';
+  }
+  function renderCloudUi(){
+    const loggedOut=$('#cloudLoggedOut'),loggedIn=$('#cloudLoggedIn'); if(!loggedOut||!loggedIn)return;
+    const isIn=!!cloudUser; loggedOut.hidden=isIn; loggedIn.hidden=!isIn;
+    if(isIn){
+      $('#cloudAccount').textContent=cloudUser.email||'ログイン中';
+      $('#cloudLastBackup').textContent=formatCloudTime(cloudMeta().lastBackupAt);
+    }
+  }
+  function scheduleCloudBackup(){
+    cloudBackupPending=true;
+    if(!cloudUser||!supabaseClient)return;
+    clearTimeout(cloudBackupTimer);
+    cloudBackupTimer=setTimeout(()=>runCloudBackup(false),2500);
+  }
+  async function runCloudBackup(showToast=true){
+    if(!supabaseClient||!cloudUser){if(showToast)toast('クラウドにログインしてください');return false;}
+    if(cloudBackupInFlight){cloudBackupPending=true;return false;}
+    cloudBackupInFlight=true; cloudBackupPending=false; setCloudState('バックアップ中…');
+    try{
+      const now=new Date().toISOString();
+      const payload={app:'habit-tracker',version:6,exportedAt:now,data:JSON.parse(JSON.stringify(data))};
+      const {error}=await supabaseClient.from('habit_backups').upsert({user_id:cloudUser.id,data:payload,updated_at:now},{onConflict:'user_id'});
+      if(error)throw error;
+      saveCloudMeta({lastBackupAt:now}); renderCloudUi(); setCloudState('自動バックアップ有効');
+      if(showToast)toast('クラウドへバックアップしました');
+      return true;
+    }catch(err){
+      cloudBackupPending=true; setCloudState('バックアップ失敗','warn');
+      if(showToast)alert('クラウドバックアップに失敗しました。\n\n'+(err?.message||'通信エラー'));
+      return false;
+    }finally{
+      cloudBackupInFlight=false;
+      if(cloudBackupPending&&cloudUser&&navigator.onLine){clearTimeout(cloudBackupTimer);cloudBackupTimer=setTimeout(()=>runCloudBackup(false),5000);}
+    }
+  }
+  async function inspectCloudBackup(){
+    if(!supabaseClient||!cloudUser)return;
+    setCloudState('接続確認中…');
+    try{
+      const {data:row,error}=await supabaseClient.from('habit_backups').select('updated_at').eq('user_id',cloudUser.id).maybeSingle();
+      if(error)throw error;
+      if(row?.updated_at){saveCloudMeta({lastBackupAt:row.updated_at});renderCloudUi();setCloudState('自動バックアップ有効');}
+      else{setCloudState('初回バックアップ待ち');await runCloudBackup(false);}
+    }catch(err){setCloudState('接続確認失敗','warn');}
+  }
+  async function restoreFromCloud(){
+    if(!supabaseClient||!cloudUser){toast('クラウドにログインしてください');return;}
+    if(!confirm('現在の端末データをクラウドバックアップ内容で置き換えます。続けますか？'))return;
+    setCloudState('復元中…');
+    try{
+      const {data:row,error}=await supabaseClient.from('habit_backups').select('data,updated_at').eq('user_id',cloudUser.id).maybeSingle();
+      if(error)throw error; if(!row)throw new Error('クラウドバックアップがまだありません');
+      const candidate=row.data?.app==='habit-tracker'&&row.data?.data?row.data.data:row.data;
+      restoreBackup(candidate,{skipCloudBackup:true});
+      saveCloudMeta({lastBackupAt:row.updated_at||null}); renderCloudUi(); setCloudState('自動バックアップ有効'); toast('クラウドから復元しました');
+    }catch(err){setCloudState('復元失敗','warn');alert('クラウドから復元できませんでした。\n\n'+(err?.message||'読み込みエラー'));}
+  }
+  async function initCloud(){
+    renderCloudUi();
+    if(!supabaseClient){setCloudState('Supabaseライブラリを読み込めません','warn');return;}
+    const {data:{session}}=await supabaseClient.auth.getSession();
+    cloudUser=session?.user||null; renderCloudUi(); if(cloudUser)await inspectCloudBackup();
+    supabaseClient.auth.onAuthStateChange((_event,session)=>{cloudUser=session?.user||null;renderCloudUi();if(cloudUser)inspectCloudBackup();});
+  }
+
+  function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $('#'+id).classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); updateGlobalTimerUi(); }
+  function updateNav(which){ $('#navHome').classList.toggle('active',which==='home'); $('#navCalendar').classList.toggle('active',which==='calendar'); $('#navSettings').classList.toggle('active',which==='settings'); }
+  function renderDailySummary(){
+    const day=getDay(selectedDate);const durationHabits=data.habits.filter(h=>h.kind==='duration');const totalMinutes=durationHabits.reduce((sum,h)=>sum+Math.max(0,Number(day[h.id]||0)),0);
+    const scoreHabits=data.habits.filter(h=>h.kind==='score');const score=scoreHabits.reduce((sum,h)=>sum+(Number.isFinite(Number(day[h.id]))?Number(day[h.id]):0),0);const max=scoreHabits.length*2;
+    $('#dailySummary').innerHTML=`<h3>${fmtDate(selectedDate)} の全体</h3><div class="daily-summary"><div class="metric"><span>総活動時間</span><b>${durationLabel(totalMinutes)}</b></div><div class="metric"><span>0 / 1 / 2 得点</span><b>${score} / ${max}</b></div></div>`;
+  }
+  function renderHome(){
+    syncToday();renderDailySummary();
+    const list=$('#habitList'); list.innerHTML=''; const day=getDay(selectedDate);
+    data.habits.forEach(h=>{
+      const b=document.createElement('button'); b.type='button'; b.className='row';
+      const left=document.createElement('div'); const name=document.createElement('strong'); name.textContent=h.label; const sub=document.createElement('small'); sub.textContent=h.kind==='tasks'?'タスク登録・チェック・進捗評価':'タップして記録・推移を確認'; left.append(name,sub);
+      const value=document.createElement('div'); value.className='value';
+      if(h.kind==='workout'){
+        const s=workoutSummary(selectedDate); value.textContent=s.ex?`${s.ex}種目・${s.sets}セット`:'未記録'; if(!s.ex)value.classList.add('muted');
+      }else if(h.kind==='tasks'){
+        const open=data.tasks.filter(t=>!t.done).length,score=data.taskScores[selectedDate];value.textContent=score===undefined?`未評価・残り${open}件`:`${score} / 2・残り${open}件`;if(score===undefined)value.classList.add('muted');
+      }else{
+        const v=day[h.id];
+        if(h.kind==='duration' && activeTimerFor(h.id)){const t=activeTimerFor(h.id); value.textContent=`${t.startedAt?'計測中':'一時停止'} ${timerClock(timerElapsedMs(t))}`;}
+        else{value.textContent=entryLabel(h,v); if(v===undefined)value.classList.add('muted');}
+      }
+      b.append(left,value);b.addEventListener('click',()=> h.kind==='workout' ? openWorkout() : openHabit(h));list.appendChild(b);
+    });
+    updateGlobalTimerUi();
+  }
+
+  function openHabit(h){ currentHabit=h; $('#detailTitle').textContent=h.label; renderHabitEditor(); renderHabitChart(); showScreen('detailScreen'); updateNav('none'); }
+  function renderHabitEditor(){
+    const h=currentHabit, day=getDay(selectedDate), box=$('#detailEditor'); box.innerHTML='';
+    const card=document.createElement('div'); card.className='card';
+    const heading=document.createElement('h3'); heading.textContent=`${fmtDate(selectedDate)} の記録`; card.appendChild(heading);
+
+    if(h.kind==='score'){
+      const grid=document.createElement('div'); grid.className='score-grid';
+      [0,1,2].forEach(n=>{const btn=document.createElement('button');btn.type='button';btn.className='score-btn'+(day[h.id]===n?' selected':'');btn.textContent=n;btn.addEventListener('click',()=>{day[h.id]=n;persist();renderHabitEditor();renderHabitChart();renderHome();toast('保存しました');});grid.appendChild(btn);});
+      card.appendChild(grid);const p=document.createElement('p');p.className='help';p.textContent='0 = できなかった、1 = まあまあ / 一部できた、2 = できた。タップすると即保存します。';card.appendChild(p);
+    }
+
+    if(h.kind==='tasks'){
+      const scoreTitle=document.createElement('h3');scoreTitle.textContent='この日の進捗';card.appendChild(scoreTitle);
+      const grid=document.createElement('div');grid.className='score-grid';const currentScore=data.taskScores[selectedDate];
+      [0,1,2].forEach(n=>{const btn=document.createElement('button');btn.type='button';btn.className='score-btn'+(currentScore===n?' selected':'');btn.textContent=n;btn.addEventListener('click',()=>{data.taskScores[selectedDate]=n;persist();renderHabitEditor();renderHabitChart();renderHome();toast('進捗を保存しました');});grid.appendChild(btn);});card.appendChild(grid);
+      const taskTitle=document.createElement('h3');taskTitle.style.marginTop='18px';taskTitle.textContent='タスク';card.appendChild(taskTitle);
+      const addWrap=document.createElement('div');addWrap.className='task-add';const inp=document.createElement('input');inp.placeholder='新しいタスク';inp.maxLength=100;const add=makeButton('追加','primary');addWrap.append(inp,add);card.appendChild(addWrap);
+      const addTask=()=>{const title=inp.value.trim();if(!title){toast('タスクを入力してください');return;}data.tasks.push({id:'task_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),title,done:false,createdAt:new Date().toISOString(),completedAt:null});inp.value='';persist();renderHabitEditor();renderHome();};add.addEventListener('click',addTask);inp.addEventListener('keydown',e=>{if(e.key==='Enter')addTask();});
+      const list=document.createElement('div');list.className='task-list';const undone=data.tasks.filter(t=>!t.done);const done=data.tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
+      const renderTaskRows=(rows,labelText)=>{if(!rows.length)return;const lab=document.createElement('div');lab.className='task-section-label';lab.textContent=labelText;list.appendChild(lab);rows.forEach(t=>{const row=document.createElement('div');row.className='task-row'+(t.done?' done':'');const check=document.createElement('button');check.type='button';check.className='task-check'+(t.done?' checked':'');check.textContent=t.done?'✓':'○';check.addEventListener('click',()=>{t.done=!t.done;t.completedAt=t.done?new Date().toISOString():null;persist();renderHabitEditor();renderHome();});const title=document.createElement('div');title.className='task-title';title.textContent=t.title;const del=document.createElement('button');del.type='button';del.className='task-delete';del.textContent='削除';del.addEventListener('click',()=>{if(!confirm(`「${t.title}」を永久に削除しますか？`))return;data.tasks=data.tasks.filter(x=>x.id!==t.id);persist();renderHabitEditor();renderHome();toast('削除しました');});row.append(check,title,del);list.appendChild(row);});};
+      renderTaskRows(undone,'未完了');renderTaskRows(done,'完了済み');if(!data.tasks.length){const e=document.createElement('div');e.className='empty';e.textContent='まだタスクがありません';list.appendChild(e);}card.appendChild(list);
+    }
+
+    if(h.kind==='duration'){
+      const hasValue=Object.prototype.hasOwnProperty.call(day,h.id),current=hasValue?Number(day[h.id]||0):0;
+      const total=document.createElement('div');total.className='summary';total.innerHTML=`<span class="help">この日の合計</span><b>${hasValue?durationLabel(current):'未記録'}</b>`;card.appendChild(total);
+      const manualTitle=document.createElement('h3');manualTitle.style.marginTop='18px';manualTitle.textContent='手動で時間帯を追加';card.appendChild(manualTitle);
+      const two=document.createElement('div');two.className='two';const startWrap=document.createElement('div');startWrap.className='field';startWrap.innerHTML='<label>開始</label>';const start=document.createElement('input');start.type='time';startWrap.appendChild(start);const endWrap=document.createElement('div');endWrap.className='field';endWrap.innerHTML='<label>終了</label>';const end=document.createElement('input');end.type='time';endWrap.appendChild(end);two.append(startWrap,endWrap);card.appendChild(two);
+      const manualActions=document.createElement('div');manualActions.className='actions';const add=makeButton('＋ 時間帯を追加','primary');const zero=makeButton('今日はやってない（0分）');
+      add.addEventListener('click',()=>{if(!start.value||!end.value){toast('開始・終了時刻を入力してください');return;}const a=clockMinutes(start.value),b=clockMinutes(end.value);if(b<=a){toast('手動入力は同じ日の開始 < 終了で入力してください');return;}const mins=b-a;addDurationRecordedSession(selectedDate,h.id,mins,'manual',start.value,end.value);persist();renderHabitEditor();renderHabitChart();renderHome();toast('追加しました');});
+      zero.addEventListener('click',()=>{if(current>0 && !confirm('この日の時間記録をすべて消して0分にしますか？'))return;markDurationZero(selectedDate,h.id);persist();renderHabitEditor();renderHabitChart();renderHome();toast('0分として記録しました');});manualActions.append(add,zero);card.appendChild(manualActions);
+
+      const timerPanel=document.createElement('div');timerPanel.className='timer-panel';const timerTitle=document.createElement('h3');timerTitle.textContent='タイマー';timerPanel.appendChild(timerTitle);const timerDisplay=document.createElement('div');timerDisplay.id='timerDisplay';timerDisplay.className='timer-display';timerDisplay.textContent='00:00';timerPanel.appendChild(timerDisplay);const active=data.activeTimer,own=activeTimerFor(h.id);const status=document.createElement('div');status.className='timer-status';if(own)status.textContent=own.startedAt?'計測中です':'一時停止中です';else if(active)status.textContent=`「${data.habits.find(x=>x.id===active.habitId)?.label||'別の習慣'}」を計測中です`;else status.textContent=selectedDate===today?'開始すると、アプリを閉じても開始時刻から計算します':'過去日はタイマーを開始できません';timerPanel.appendChild(status);const timerActions=document.createElement('div');timerActions.className='actions';if(!active){const startBtn=makeButton('▶ 開始','primary');startBtn.disabled=selectedDate!==today;startBtn.addEventListener('click',()=>startDurationTimer(h.id));timerActions.appendChild(startBtn);}else if(own){if(own.startedAt){const pause=makeButton('Ⅱ 一時停止');pause.addEventListener('click',()=>pauseDurationTimer(h.id));timerActions.appendChild(pause);}else{const resume=makeButton('▶ 再開','primary');resume.addEventListener('click',()=>resumeDurationTimer(h.id));timerActions.appendChild(resume);}const finish=makeButton('■ 終了','danger');finish.addEventListener('click',()=>finishDurationTimer(h.id));timerActions.appendChild(finish);}else{const blocked=makeButton('他のタイマーが動作中');blocked.disabled=true;timerActions.appendChild(blocked);}timerPanel.appendChild(timerActions);card.appendChild(timerPanel);
+
+      const sessions=sessionBucket(selectedDate,h.id);const history=document.createElement('div');history.className='timer-panel';const historyTitle=document.createElement('h3');historyTitle.textContent='この日の時間記録';history.appendChild(historyTitle);const tracked=sessions.reduce((sum,s)=>sum+(Number(s.minutes)||0),0),legacy=Math.max(0,current-tracked);
+      if(!sessions.length&&!legacy){const empty=document.createElement('div');empty.className='empty';empty.textContent=hasValue&&current===0?'0分（やっていない）として記録済み':'まだ時間記録がありません';history.appendChild(empty);}else{const list=document.createElement('div');list.className='session-list';if(legacy){const row=document.createElement('div');row.className='session-row';row.innerHTML=`<div class="session-info"><span>以前の記録</span><span class="session-time">時刻情報なし</span></div><b>${durationLabel(legacy)}</b>`;list.appendChild(row);}sessions.forEach(s=>{const row=document.createElement('div');row.className='session-row';const info=document.createElement('div');info.className='session-info';const type=document.createElement('span');type.textContent=s.kind==='timer'?'タイマー':'手動';const time=document.createElement('span');time.className='session-time';time.textContent=s.startTime&&s.endTime?`${s.startTime} → ${s.endTime}`:'時刻情報なし';info.append(type,time);const amount=document.createElement('b');amount.textContent=durationLabel(s.minutes);const acts=document.createElement('div');acts.className='session-actions';const edit=makeButton('編集');edit.addEventListener('click',()=>editDurationSession(selectedDate,h.id,s.id));const del=makeButton('削除','danger');del.addEventListener('click',()=>{deleteDurationSession(selectedDate,h.id,s.id);persist();renderHabitEditor();renderHabitChart();renderHome();toast('時間記録を削除しました');});acts.append(edit,del);row.append(info,amount,acts);list.appendChild(row);});history.appendChild(list);}card.appendChild(history);ensureTimerUiLoop();
+    }
+
+    if(h.kind==='weight'){
+      const f=document.createElement('div');f.className='field';f.innerHTML='<label>体重 (kg)</label>';const inp=document.createElement('input');inp.type='number';inp.step='0.1';inp.min='20';inp.max='300';inp.inputMode='decimal';inp.value=day[h.id]??'';f.appendChild(inp);card.appendChild(f);const save=makeButton('保存','primary');save.style.width='100%';save.addEventListener('click',()=>{const v=Number(inp.value);if(!Number.isFinite(v)||v<20||v>300){toast('体重を確認してください');return;}day[h.id]=Math.round(v*10)/10;persist();renderHabitChart();renderHome();toast('保存しました');});card.appendChild(save);
+    }
+
+    if(h.kind==='wake'||h.kind==='bed'){
+      const base=getBaselineFor(selectedDate),existing=day[h.id];const f=document.createElement('div');f.className='field';f.innerHTML=`<label>${h.kind==='wake'?'起床':'就寝'}時刻</label>`;const inp=document.createElement('input');inp.type='time';inp.value=existing?.time||'';f.appendChild(inp);card.appendChild(f);const info=document.createElement('p');info.className='help';info.textContent=`この日の基準：${h.kind==='wake'?base.wake:base.bed}。基準より早い場合は負、遅い場合は正の差分で表示します。`;card.appendChild(info);const save=makeButton('保存','primary');save.style.width='100%';save.addEventListener('click',()=>{if(!inp.value){toast('時刻を入力してください');return;}const active=getBaselineFor(selectedDate),baseline=h.kind==='wake'?active.wake:active.bed,diff=sleepDifference(h.kind,inp.value,baseline);day[h.id]={time:inp.value,baseline,diff};persist();renderHabitEditor();renderHabitChart();renderHome();toast('保存しました');});card.appendChild(save);if(existing?.time){const baseline=existing.baseline||(h.kind==='wake'?base.wake:base.bed),diff=sleepDifference(h.kind,existing.time,baseline);const pill=document.createElement('div');pill.style.marginTop='10px';pill.innerHTML=`<span class="pill">基準との差 ${signedMinutesLabel(diff)}</span>`;card.appendChild(pill);}
+    }
+
+    if(h.kind!=='tasks'&&day[h.id]!==undefined){const del=makeButton('この日の記録を削除','danger');del.style.width='100%';del.style.marginTop='8px';del.addEventListener('click',()=>{delete day[h.id];if(h.kind==='duration'&&data.durationSessions[selectedDate])delete data.durationSessions[selectedDate][h.id];persist();renderHabitEditor();renderHabitChart();renderHome();toast('削除しました');});card.appendChild(del);}
+    if(h.kind==='tasks'&&data.taskScores[selectedDate]!==undefined){const del=makeButton('この日の進捗評価を削除','danger');del.style.width='100%';del.style.marginTop='10px';del.addEventListener('click',()=>{delete data.taskScores[selectedDate];persist();renderHabitEditor();renderHabitChart();renderHome();toast('進捗評価を削除しました');});card.appendChild(del);}
+    box.appendChild(card);
+  }
+
+  function fieldSelect(label,id,options,value){ const wrap=document.createElement('div'); wrap.className='field'; const lab=document.createElement('label'); lab.textContent=label; const select=document.createElement('select'); select.id=id; options.forEach(o=>{const op=document.createElement('option');op.value=o.v;op.textContent=o.t;select.appendChild(op)}); select.value=String(value); wrap.append(lab,select); return {wrap,select}; }
+  function makeButton(text,cls=''){const b=document.createElement('button');b.type='button';b.className=`btn ${cls}`;b.textContent=text;return b;}
+
+  function habitSeries(h){
+    const dates=lastNDates(selectedDate,30);return dates.map(date=>{let y=null;if(h.kind==='tasks'){const v=data.taskScores[date];if(v!==undefined)y=Number(v);}else{const v=data.entries[date]?.[h.id];if(v!==undefined){if(h.kind==='wake'||h.kind==='bed'){if(v&&v.time&&v.baseline)y=sleepDifference(h.kind,v.time,v.baseline);else y=Number(v?.diff??v?.delay??0);}else y=Number(v);}}return{date,y};});
+  }
+  function scrollChartToLatest(container){requestAnimationFrame(()=>{const wrap=container?.querySelector('.chart-wrap');if(wrap)wrap.scrollLeft=wrap.scrollWidth;});}
+  function renderHabitChart(){
+    const h=currentHabit;let unit='';if(h.kind==='weight')unit='kg';else if(h.kind==='duration'||h.kind==='wake'||h.kind==='bed')unit='分';else unit='0–2';const box=$('#detailChart');box.innerHTML=chartHTML(habitSeries(h),unit,(h.kind==='score'||h.kind==='tasks')?{min:0,max:2}:null,'過去30日');scrollChartToLatest(box);
+  }
+  function lastNDates(endDate,n){const [y,m,d]=endDate.split('-').map(Number),end=new Date(y,m-1,d),out=[];for(let i=n-1;i>=0;i--){const x=new Date(end);x.setDate(end.getDate()-i);out.push(isoDate(x));}return out;}
+  function chartHTML(series,unit,fixed,caption){
+    const values=series.filter(p=>p.y!==null&&Number.isFinite(p.y)).map(p=>p.y);if(!values.length)return `<div class="empty">まだ記録がありません</div><div class="legend"><span>${caption}</span><span>${unit}</span></div>`;
+    let min=fixed?fixed.min:Math.min(...values),max=fixed?fixed.max:Math.max(...values);if(min===max){if(min===0)max=1;else if(min>0){min=min*.9;max=max*1.1;}else{min=min*1.1;max=max*.9;}}if(!fixed&&min>0)min=Math.max(0,min-(max-min)*.15);
+    const W=Math.max(620,series.length*34),H=240,L=44,R=16,T=14,B=42,pw=W-L-R,ph=H-T-B;const x=i=>L+(series.length===1?pw/2:pw*i/(series.length-1));const y=v=>T+ph-(v-min)/(max-min)*ph;let svg=`<div class="chart-wrap"><svg class="chart" style="min-width:${W}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="推移グラフ">`;
+    for(let i=0;i<5;i++){const yy=T+ph*i/4,val=max-(max-min)*i/4;svg+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"></line><text x="4" y="${yy+4}">${formatTick(val)}</text>`;}if(min<=0&&max>=0){const zy=y(0);svg+=`<line class="zero" x1="${L}" x2="${W-R}" y1="${zy}" y2="${zy}"></line>`;}
+    const segs=[];let cur=[];series.forEach((p,i)=>{if(p.y===null){if(cur.length)segs.push(cur);cur=[];}else cur.push({x:x(i),y:y(p.y),p});});if(cur.length)segs.push(cur);segs.forEach(seg=>{if(seg.length>1)svg+=`<polyline class="line" points="${seg.map(q=>`${q.x},${q.y}`).join(' ')}"></polyline>`;seg.forEach(q=>svg+=`<circle class="dot" cx="${q.x}" cy="${q.y}" r="4"><title>${q.p.date}: ${q.p.y} ${unit}</title></circle>`);});
+    const labelIdx=[0,Math.round((series.length-1)*.25),Math.round((series.length-1)*.5),Math.round((series.length-1)*.75),series.length-1].filter((v,i,a)=>v>=0&&a.indexOf(v)===i);labelIdx.forEach(i=>{if(series[i])svg+=`<text x="${x(i)}" y="${H-14}" text-anchor="middle">${fmtDate(series[i].date)}</text>`;});svg+='</svg></div>';return `${svg}<div class="legend"><span>${caption}</span><span>${unit}</span></div>`;
+  }
+  function formatTick(n){ return Math.abs(n)>=1000?Math.round(n).toLocaleString():Number.isInteger(n)?n:String(Math.round(n*10)/10); }
+
+  function openWorkout(){renderWorkoutList();showScreen('workoutScreen');updateNav('none');}
+  function muscleDoneOn(date,group){return data.exercises.some(ex=>ex.muscleGroup===group&&(data.workouts[date]?.[ex.id]||[]).some(validSet));}
+  function renderMuscleHistory(){
+    const dates=lastNDates(selectedDate,7).reverse();let html='<div class="muscle-table-wrap"><table class="muscle-table"><thead><tr><th>日付</th>'+MUSCLE_GROUPS.map(g=>`<th>${g}</th>`).join('')+'</tr></thead><tbody>';dates.forEach(date=>{html+=`<tr><td>${fmtDate(date)}</td>`+MUSCLE_GROUPS.map(g=>muscleDoneOn(date,g)?'<td class="done-mark">○</td>':'<td class="not-done-mark">×</td>').join('')+'</tr>';});html+='</tbody></table></div>';$('#muscleHistory').innerHTML=html;
+  }
+  function renderWorkoutList(){
+    const s=workoutSummary(selectedDate);$('#workoutDaySummary').innerHTML=`<h3>${fmtDate(selectedDate)} の筋トレ</h3><div class="summary"><span class="help">記録済み</span><b>${s.ex}種目・${s.sets}セット</b></div>`;renderMuscleHistory();const list=$('#exerciseList');list.innerHTML='';if(!data.exercises.length){list.innerHTML='<div class="empty">まだ種目がありません。「＋ 種目」から追加してください。</div>';return;}
+    const groups=[...MUSCLE_GROUPS];if(data.exercises.some(ex=>!ex.muscleGroup))groups.push('');groups.forEach(group=>{const items=data.exercises.filter(ex=>ex.muscleGroup===group);if(!items.length)return;const block=document.createElement('div');block.className='group-block';const head=document.createElement('div');head.className='group-heading';head.innerHTML=`<b>${group||'部位未設定'}</b><span>${items.length}種目</span>`;block.appendChild(head);const sublist=document.createElement('div');sublist.className='list';items.forEach(ex=>{const wrap=document.createElement('div');wrap.className='exercise-row';const row=document.createElement('button');row.type='button';row.className='row';const daySets=data.workouts[selectedDate]?.[ex.id]||[],valid=daySets.filter(validSet);const left=document.createElement('div');left.innerHTML=`<strong>${escapeHtml(ex.name)}</strong><small>${ex.type==='bodyweight'?'自重種目':'重量種目'}${ex.muscleGroup?'・'+ex.muscleGroup:''}</small>`;const val=document.createElement('div');val.className='value'+(valid.length?'':' muted');val.textContent=valid.length?`${valid.length}セット`:'未記録';row.append(left,val);row.addEventListener('click',()=>openExercise(ex.id));const menu=document.createElement('button');menu.type='button';menu.className='tiny';menu.textContent='⋯';menu.addEventListener('click',()=>exerciseMenu(ex.id));wrap.append(row,menu);sublist.appendChild(wrap);});block.appendChild(sublist);list.appendChild(block);});
+  }
+  function exerciseMenu(id){
+    const ex=data.exercises.find(x=>x.id===id);if(!ex)return;const action=prompt(`「${ex.name}」\n名前を変更する場合は新しい名前を入力してください。\n削除する場合は DELETE と入力してください。`,ex.name);if(action===null)return;if(action.trim()==='DELETE'){if(confirm('この種目と全記録を削除しますか？')){data.exercises=data.exercises.filter(x=>x.id!==id);Object.keys(data.workouts).forEach(d=>{if(data.workouts[d])delete data.workouts[d][id]});persist();renderWorkoutList();toast('削除しました');}return;}if(action.trim())ex.name=action.trim();const group=prompt(`部位を入力してください：${MUSCLE_GROUPS.join(' / ')}`,ex.muscleGroup||'');if(group===null)return;if(!MUSCLE_GROUPS.includes(group.trim())){toast('部位は 胸・背中・肩・腕・脚・腹 から選んでください');return;}ex.muscleGroup=group.trim();persist();renderWorkoutList();toast('変更しました');
+  }
+  function openExercise(id){currentExerciseId=id;const ex=data.exercises.find(x=>x.id===id);if(!ex)return;$('#exerciseTitle').textContent=ex.name;editingSets=JSON.parse(JSON.stringify(data.workouts[selectedDate]?.[id]||[]));if(!editingSets.length)editingSets=[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}];renderSets();renderExerciseChart();showScreen('exerciseScreen');}
+  function renderSets(){
+    const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;$('#exerciseDateLabel').textContent=`${fmtDate(selectedDate)} のセット${ex.muscleGroup?'・'+ex.muscleGroup:''}`;$('#setHeader').innerHTML=ex.type==='bodyweight'?'<div class="set-head body"><div></div><div>回数</div><div></div></div>':'<div class="set-head"><div></div><div>重量 kg</div><div>回数</div><div></div></div>';const box=$('#sets');box.innerHTML='';editingSets.forEach((s,i)=>{const row=document.createElement('div');row.className='set-row'+(ex.type==='bodyweight'?' body':'');const no=document.createElement('div');no.className='set-no';no.textContent=i+1;row.appendChild(no);if(ex.type!=='bodyweight'){const w=document.createElement('input');w.type='number';w.min='0';w.step='0.5';w.inputMode='decimal';w.placeholder='重量';w.value=s.weight??'';w.addEventListener('input',()=>{s.weight=w.value;updateVolume();});row.appendChild(w);}const r=document.createElement('input');r.type='number';r.min='0';r.step='1';r.inputMode='numeric';r.placeholder='回数';r.value=s.reps??'';r.addEventListener('input',()=>{s.reps=r.value;updateVolume();});row.appendChild(r);const del=document.createElement('button');del.type='button';del.className='icon-btn';del.textContent='×';del.addEventListener('click',()=>{editingSets.splice(i,1);if(!editingSets.length)editingSets=[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}];renderSets();});row.appendChild(del);box.appendChild(row);});updateVolume();
+  }
+  function exerciseMetrics(ex,arr){
+    const valid=(arr||[]).filter(validSet);if(!valid.length)return null;if(ex.type==='bodyweight'){return{total:valid.reduce((a,s)=>a+(Number(s.reps)||0),0),maxSet:Math.max(...valid.map(s=>Number(s.reps)||0)),unit:'回'};}return{total:valid.reduce((a,s)=>a+(Number(s.weight)||0)*(Number(s.reps)||0),0),maxSet:Math.max(...valid.map(s=>(Number(s.weight)||0)*(Number(s.reps)||0))),unit:'kg'};
+  }
+  function updateVolume(){
+    const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const m=exerciseMetrics(ex,editingSets)||{total:0,maxSet:0,unit:ex.type==='bodyweight'?'回':'kg'};if(ex.type==='bodyweight'){$('#volumeLabel').textContent='合計回数';$('#maxSetLabel').textContent='最大セット回数';}else{$('#volumeLabel').textContent='総ボリューム（片腕種目も片腕換算）';$('#maxSetLabel').textContent='最大セットボリューム';}$('#volumeValue').textContent=`${Math.round(m.total*10)/10} ${m.unit}`;$('#maxSetValue').textContent=`${Math.round(m.maxSet*10)/10} ${m.unit}`;
+  }
+  function weekStart(date){const [y,m,d]=date.split('-').map(Number),x=new Date(y,m-1,d),day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return isoDate(x);}
+  function aggregateExercise(ex,mode){
+    const map={};Object.keys(data.workouts).sort().forEach(date=>{if(date>selectedDate)return;const m=exerciseMetrics(ex,data.workouts[date]?.[ex.id]);if(!m)return;const key=mode==='week'?weekStart(date):date.slice(0,7)+'-01';map[key]=(map[key]||0)+m.total;});return Object.entries(map).map(([date,y])=>({date,y})).slice(-12);
+  }
+  function renderExerciseChart(){
+    const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const dates=lastNDates(selectedDate,120),daily=[],maxDaily=[];dates.forEach(date=>{const m=exerciseMetrics(ex,data.workouts[date]?.[ex.id]);if(m){daily.push({date,y:m.total});maxDaily.push({date,y:m.maxSet});}});const unit=ex.type==='bodyweight'?'回':'kg';$('#exerciseChartTitle').textContent=ex.type==='bodyweight'?'実施日の合計回数':'実施日の総ボリューム';$('#exerciseMaxChartTitle').textContent=ex.type==='bodyweight'?'最大セット回数の推移':'最大セットボリュームの推移';const dayBox=$('#exerciseChart'),maxBox=$('#exerciseMaxChart'),weekBox=$('#exerciseWeekChart'),monthBox=$('#exerciseMonthChart');dayBox.innerHTML=chartHTML(daily,unit,null,'実施日のみ');maxBox.innerHTML=chartHTML(maxDaily,unit,null,'実施日のみ');weekBox.innerHTML=chartHTML(aggregateExercise(ex,'week'),unit,null,'週ごとの合計');monthBox.innerHTML=chartHTML(aggregateExercise(ex,'month'),unit,null,'月ごとの合計');[dayBox,maxBox,weekBox,monthBox].forEach(scrollChartToLatest);
+  }
+
+  function habitKindLabel(kind){
+    if(kind==='duration') return '作業時間';
+    if(kind==='score') return '0 / 1 / 2';
+    if(kind==='wake') return '起床時刻（固定）';
+    if(kind==='bed') return '就寝時刻（固定）';
+    if(kind==='weight') return '体重（固定）';
+    if(kind==='workout') return '筋トレ（固定）';
+    if(kind==='tasks') return 'タスク進捗（固定）';
+    return kind;
+  }
+  function renderHabitManagement(){
+    const box=$('#habitManagement'); box.innerHTML='';
+    data.habits.forEach(h=>{
+      const div=document.createElement('div'); div.className='settings-item';
+      const title=document.createElement('b'); title.textContent=h.label;
+      const meta=document.createElement('span'); meta.textContent=habitKindLabel(h.kind);
+      div.append(title,meta);
+      if(h.locked){
+        const fixed=document.createElement('span'); fixed.className='pill'; fixed.style.marginTop='7px'; fixed.style.display='inline-flex'; fixed.textContent='固定'; div.appendChild(fixed);
+      }else{
+        const del=makeButton('削除','danger'); del.style.marginTop='7px';
+        del.addEventListener('click',()=>deleteHabit(h.id)); div.appendChild(del);
+      }
+      box.appendChild(div);
+    });
+  }
+  function deleteHabit(id){
+    const h=data.habits.find(x=>x.id===id); if(!h || h.locked)return;
+    if(activeTimerFor(id)){toast('計測中のタイマーを終了してから削除してください');return;}
+    if(!confirm(`「${h.label}」を削除しますか？\nこの習慣の過去の記録も削除されます。`))return;
+    data.habits=data.habits.filter(x=>x.id!==id);
+    Object.values(data.entries).forEach(day=>{ if(day && Object.prototype.hasOwnProperty.call(day,id)) delete day[id]; });
+    Object.values(data.durationSessions).forEach(day=>{ if(day && Object.prototype.hasOwnProperty.call(day,id)) delete day[id]; });
+    persist(); renderHabitManagement(); renderHome(); toast('習慣を削除しました');
+  }
+
+  function renderBaselines(){
+    const box=$('#baselineHistory');box.innerHTML=''; const sorted=data.baselines.slice().sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));sorted.forEach(b=>{const div=document.createElement('div');div.className='settings-item';div.innerHTML=`<b>${b.effectiveDate}〜</b><span>起床 ${b.wake} / 就寝 ${b.bed}</span>`; if(b.effectiveDate>today){const del=makeButton('未来設定を削除','danger');del.style.marginTop='7px';del.addEventListener('click',()=>{data.baselines=data.baselines.filter(x=>x!==b);persist();renderBaselines();toast('削除しました');});div.appendChild(del);}box.appendChild(div);});
+  }
+
+  function monthShift(ym,delta){const [y,m]=ym.split('-').map(Number),d=new Date(y,m-1+delta,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+  function renderCalendar(){
+    const [y,m]=calendarMonth.split('-').map(Number),first=new Date(y,m-1,1),last=new Date(y,m,0),start=new Date(first);start.setDate(first.getDate()-first.getDay());$('#calendarMonthLabel').textContent=`${y}年${m}月`;const grid=$('#calendarGrid');grid.innerHTML='';['日','月','火','水','木','金','土'].forEach(w=>{const el=document.createElement('div');el.className='calendar-weekday';el.textContent=w;grid.appendChild(el);});for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const date=isoDate(d),btn=document.createElement('button');btn.type='button';btn.className='calendar-day'+(d.getMonth()!==m-1?' out':'')+(date===calendarSelectedDate?' selected':'')+(date===today?' today':'');const events=data.calendarEvents[date]||[];btn.innerHTML=`<span class="day-num">${d.getDate()}</span>${events.length?`<span class="event-count">予定 ${events.length}</span>`:''}`;btn.addEventListener('click',()=>{calendarSelectedDate=date;calendarMonth=date.slice(0,7);renderCalendar();});grid.appendChild(btn);}renderCalendarEvents();
+  }
+  function renderCalendarEvents(){
+    $('#calendarDateLabel').textContent=`${calendarSelectedDate} の予定`;const box=$('#calendarEventList'),events=(data.calendarEvents[calendarSelectedDate]||[]).slice().sort((a,b)=>String(a.time||'99:99').localeCompare(String(b.time||'99:99')));box.innerHTML='';if(!events.length){box.innerHTML='<div class="empty">予定はありません</div>';return;}events.forEach(ev=>{const row=document.createElement('div');row.className='event-row';const text=document.createElement('span');text.textContent=`${ev.time?ev.time+' ':''}${ev.title}`;const del=document.createElement('button');del.type='button';del.textContent='削除';del.addEventListener('click',()=>{data.calendarEvents[calendarSelectedDate]=(data.calendarEvents[calendarSelectedDate]||[]).filter(x=>x.id!==ev.id);persist();renderCalendar();toast('予定を削除しました');});row.append(text,del);box.appendChild(row);});
+  }
+  $('#calendarPrev').addEventListener('click',()=>{calendarMonth=monthShift(calendarMonth,-1);renderCalendar();});
+  $('#calendarNext').addEventListener('click',()=>{calendarMonth=monthShift(calendarMonth,1);renderCalendar();});
+  $('#calendarAddEvent').addEventListener('click',()=>{const title=$('#calendarEventTitle').value.trim(),time=$('#calendarEventTime').value;if(!title){toast('予定を入力してください');return;}if(!data.calendarEvents[calendarSelectedDate])data.calendarEvents[calendarSelectedDate]=[];data.calendarEvents[calendarSelectedDate].push({id:'event_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),title,time});$('#calendarEventTitle').value='';$('#calendarEventTime').value='';persist();renderCalendar();toast('予定を追加しました');});
+  $('#globalTimerOpen').addEventListener('click',()=>{const t=data.activeTimer;if(!t)return;selectedDate=today;selectedDateInput.value=today;const h=data.habits.find(x=>x.id===t.habitId);if(h)openHabit(h);});
+
+  $('#selectedDate').addEventListener('change',e=>{ if(!e.target.value)return; if(e.target.value>today){e.target.value=today;selectedDate=today;}else selectedDate=e.target.value; renderHome(); });
+  $('#detailBack').addEventListener('click',()=>{renderHome();showScreen('homeScreen');updateNav('home');});
+  $('#workoutBack').addEventListener('click',()=>{renderHome();showScreen('homeScreen');updateNav('home');});
+  $('#exerciseBack').addEventListener('click',()=>{renderWorkoutList();showScreen('workoutScreen');});
+  $('#navHome').addEventListener('click',()=>{renderHome();showScreen('homeScreen');updateNav('home');});
+  $('#navCalendar').addEventListener('click',()=>{calendarSelectedDate=selectedDate;calendarMonth=calendarSelectedDate.slice(0,7);renderCalendar();showScreen('calendarScreen');updateNav('calendar');});
+  $('#navSettings').addEventListener('click',()=>{renderHabitManagement();renderBaselines();showScreen('settingsScreen');updateNav('settings');});
+
+  $('#addHabit').addEventListener('click',()=>{
+    const name=$('#newHabitName').value.trim(), kind=$('#newHabitKind').value;
+    if(!name){toast('習慣名を入力してください');return;}
+    if(!['duration','score'].includes(kind)){toast('記録方式を確認してください');return;}
+    const duplicate=data.habits.some(h=>h.label.toLowerCase()===name.toLowerCase());
+    if(duplicate){toast('同じ名前の習慣があります');return;}
+    data.habits.push({id:'habit_'+Date.now(),label:name,kind});
+    persist(); $('#newHabitName').value=''; renderHabitManagement(); renderHome(); toast('習慣を追加しました');
+  });
+
+  $('#showAddExercise').addEventListener('click',()=>{$('#addExerciseCard').hidden=false;$('#exerciseName').focus();});
+  $('#cancelAddExercise').addEventListener('click',()=>{$('#addExerciseCard').hidden=true;$('#exerciseName').value='';});
+  $('#addExercise').addEventListener('click',()=>{const name=$('#exerciseName').value.trim(),type=$('#exerciseType').value,muscleGroup=$('#exerciseMuscleGroup').value;if(!name){toast('種目名を入力してください');return;}if(!MUSCLE_GROUPS.includes(muscleGroup)){toast('部位を選んでください');return;}data.exercises.push({id:'ex_'+Date.now(),name,type,muscleGroup});persist();$('#exerciseName').value='';$('#addExerciseCard').hidden=true;renderWorkoutList();toast('種目を追加しました');});
+  $('#addSet').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);editingSets.push(ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''});renderSets();});
+  $('#saveSets').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const cleaned=editingSets.map(s=>ex.type==='bodyweight'?{reps:Number(s.reps)||0}:{weight:Number(s.weight)||0,reps:Number(s.reps)||0}).filter(validSet);if(!data.workouts[selectedDate])data.workouts[selectedDate]={};if(cleaned.length)data.workouts[selectedDate][ex.id]=cleaned;else delete data.workouts[selectedDate][ex.id];persist();editingSets=JSON.parse(JSON.stringify(cleaned.length?cleaned:[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}]));renderSets();renderExerciseChart();renderMuscleHistory();renderHome();toast('保存しました');});
+  $('#renameExercise').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const name=prompt('新しい種目名',ex.name);if(name===null)return;const group=prompt(`部位を入力してください：${MUSCLE_GROUPS.join(' / ')}`,ex.muscleGroup||'');if(group===null)return;if(!MUSCLE_GROUPS.includes(group.trim())){toast('部位を確認してください');return;}if(name.trim())ex.name=name.trim();ex.muscleGroup=group.trim();persist();$('#exerciseTitle').textContent=ex.name;renderSets();toast('変更しました');});
+
+  $('#saveBaseline').addEventListener('click',()=>{const effectiveDate=$('#effectiveDate').value,wake=$('#wakeBase').value,bed=$('#bedBase').value;if(!effectiveDate||!wake||!bed){toast('すべて入力してください');return;}if(effectiveDate<today){toast('過去日は指定できません');return;} const existing=data.baselines.find(b=>b.effectiveDate===effectiveDate);if(existing){existing.wake=wake;existing.bed=bed;}else data.baselines.push({effectiveDate,wake,bed});data.baselines.sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));persist();renderBaselines();toast('基準を保存しました');});
+
+  function exportBackup(){
+    if(data.activeTimer){toast('タイマーを終了してからバックアップしてください');return;}
+    const payload={
+      app:'habit-tracker',
+      version:6,
+      exportedAt:new Date().toISOString(),
+      data
+    };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`habit-tracker-backup-${today}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    toast('バックアップを書き出しました');
+  }
+  function isObject(v){ return v && typeof v==='object' && !Array.isArray(v); }
+  function validateBackup(candidate){
+    if(!isObject(candidate)) return false;
+    if(!isObject(candidate.entries)) return false;
+    if(!Array.isArray(candidate.baselines) || !candidate.baselines.length) return false;
+    if(!Array.isArray(candidate.habits) || !candidate.habits.length) return false;
+    if(!Array.isArray(candidate.exercises)) return false;
+    if(!isObject(candidate.workouts)) return false;
+    return true;
+  }
+  function restoreBackup(candidate,options={}){
+    if(!validateBackup(candidate)) throw new Error('このアプリのバックアップ形式ではありません');
+    data=normalizeData({...candidate,activeTimer:null});data.activeTimer=null;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));if(!options.skipCloudBackup)scheduleCloudBackup();selectedDate=today;selectedDateInput.value=today;calendarSelectedDate=today;calendarMonth=today.slice(0,7);renderHome();renderHabitManagement();renderBaselines();updateAppBadge();updateGlobalTimerUi();showScreen('homeScreen');updateNav('home');
+  }
+  $('#cloudLogin').addEventListener('click',async()=>{
+    if(!supabaseClient){alert('Supabaseライブラリを読み込めませんでした。通信状態を確認してください。');return;}
+    const email=$('#cloudEmail').value.trim(),password=$('#cloudPassword').value;
+    if(!email||!password){toast('メールアドレスとパスワードを入力してください');return;}
+    $('#cloudLogin').disabled=true;
+    try{
+      const {data:authData,error}=await supabaseClient.auth.signInWithPassword({email,password});
+      if(error)throw error; cloudUser=authData.user; $('#cloudPassword').value=''; renderCloudUi(); await inspectCloudBackup(); toast('ログインしました');
+    }catch(err){alert('ログインできませんでした。メールアドレスとパスワードを確認してください。\n\n'+(err?.message||'ログインエラー'));}
+    finally{$('#cloudLogin').disabled=false;}
+  });
+  $('#cloudLogout').addEventListener('click',async()=>{if(!supabaseClient)return;await supabaseClient.auth.signOut();cloudUser=null;renderCloudUi();toast('ログアウトしました');});
+  $('#cloudBackupNow').addEventListener('click',()=>runCloudBackup(true));
+  $('#cloudRestore').addEventListener('click',restoreFromCloud);
+
+  $('#exportBackup').addEventListener('click',exportBackup);
+  $('#importBackup').addEventListener('click',()=>$('#backupFile').click());
+  $('#backupFile').addEventListener('change',async e=>{
+    const file=e.target.files && e.target.files[0];
+    e.target.value='';
+    if(!file)return;
+    if(!confirm('現在のデータをバックアップ内容で置き換えます。続けますか？'))return;
+    try{
+      const parsed=JSON.parse(await file.text());
+      const candidate=parsed && parsed.app==='habit-tracker' && parsed.data ? parsed.data : parsed;
+      restoreBackup(candidate);
+      toast('バックアップを復元しました');
+    }catch(err){
+      alert('復元できませんでした。正しいバックアップファイルか確認してください。\n\n'+(err && err.message ? err.message : '読み込みエラー'));
+    }
+  });
+
+  function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+
+  window.addEventListener('focus',()=>{syncToday();renderHome();updateTimerUi();updateGlobalTimerUi();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){syncToday();renderHome();updateTimerUi();updateGlobalTimerUi();}});
+  window.addEventListener('online',()=>{if(cloudBackupPending&&cloudUser)runCloudBackup(false);});
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  renderHome();
+  renderHabitManagement();
+  ensureTimerUiLoop();
+  updateAppBadge();
+  initCloud();
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').catch(()=>{});});
+  }
+})();
+</script>
+</body>
+</html>

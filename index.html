@@ -34,7 +34,17 @@
     .score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.score-btn{min-height:54px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:20px;font-weight:800}.score-btn.selected{background:var(--accent);border-color:var(--accent);color:#fff}
     .field{display:grid;gap:6px;margin-bottom:10px}.field label{font-size:13px;color:var(--muted);font-weight:700}.field input,.field select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);padding:10px 12px;font-size:16px}
     .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{flex:1}
-    .chart-wrap{overflow-x:auto}.chart{display:block;width:100%;min-width:560px;height:auto}.chart text{fill:var(--muted);font-size:11px}.chart .grid{stroke:var(--line);stroke-width:1}.chart .line{fill:none;stroke:var(--accent);stroke-width:3}.chart .dot{fill:var(--accent)}.chart .zero{stroke:#777;stroke-width:1;stroke-dasharray:4 4}
+    .screen,.card,.chart-stack,.chart-stack>div,.exercise-row,.exercise-row .row{min-width:0;max-width:100%}
+    .chart-wrap,.muscle-table-wrap,.history-wrap{width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+    .chart{display:block;width:100%;height:auto}.chart text{fill:var(--muted);font-size:11px}.chart .grid{stroke:var(--line);stroke-width:1}.chart .line{fill:none;stroke:var(--accent);stroke-width:3}.chart .dot{fill:var(--accent)}.chart .zero{stroke:#777;stroke-width:1;stroke-dasharray:4 4}
+    .chart .point-label{fill:var(--accent);font-weight:700;font-size:10px}
+    .date-nav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;margin-bottom:8px}
+    .date-pager{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+    .date-pager::-webkit-scrollbar{display:none}.date-page{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;min-height:50px;border:0;background:transparent;font-weight:700;color:var(--accent)}
+    .date-help{margin:0 0 12px;text-align:center}.btn:disabled{opacity:.4;cursor:default}
+    .period-tabs{display:flex;gap:6px;margin-bottom:12px}.period-tabs .btn{flex:1}.period-tabs .selected{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+    .history-table{border-collapse:collapse;width:100%;min-width:460px;font-size:12px}.history-table th,.history-table td{padding:8px;border:1px solid var(--line);text-align:left;vertical-align:top}.history-table th{background:var(--bg)}
+    .muscle-table th:first-child,.muscle-table td:first-child{position:sticky;left:0;background:var(--card);z-index:1}.muscle-table td,.muscle-table th{min-width:66px}
     .legend{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px}
     .set-head,.set-row{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) 44px;gap:7px;align-items:center}.set-head.body,.set-row.body{grid-template-columns:34px minmax(0,1fr) 44px}.set-head{font-size:12px;color:var(--muted);padding:0 3px 4px}.set-row{margin-bottom:7px}.set-row input{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 9px;font-size:16px;background:#fff}.set-no{color:var(--muted);font-size:13px;text-align:center}.icon-btn{min-height:44px;border:1px solid var(--line);background:#fff;border-radius:10px}.summary{display:flex;justify-content:space-between;gap:12px;align-items:end;padding-top:10px;border-top:1px solid var(--line);margin-top:10px}.summary b{font-size:22px}
     .exercise-row{display:flex;gap:8px;align-items:stretch}.exercise-row .row{flex:1}.tiny{width:48px;flex:0 0 48px;border:1px solid var(--line);background:#fff;border-radius:12px;font-weight:800}
@@ -67,19 +77,25 @@
       <div><h1>習慣トラッカー</h1><div class="sub">終わったものから記録</div></div>
       <input id="selectedDate" class="datebox" type="date" />
     </div>
+    <div class="date-nav"><button id="datePrev" class="btn" type="button" aria-label="前の日">←</button><div id="datePager" class="date-pager" aria-label="左右にスクロールして日付を選択"></div><button id="dateNext" class="btn" type="button" aria-label="次の日">→</button></div>
+    <p class="help date-help">日付を左右にスワイプして移動 <button id="dateToday" class="btn" type="button">今日へ</button></p>
     <div id="dailySummary" class="card"></div>
     <div id="habitList" class="list"></div>
+    <div class="card" style="margin-top:16px"><h3>総活動時間・得点の推移</h3><div id="overviewPeriods" class="period-tabs"></div><div class="chart-stack"><div><h3>総活動時間</h3><div id="totalTimeChart"></div></div><div><h3>0 / 1 / 2 得点</h3><div id="totalScoreChart"></div></div></div></div>
   </section>
 
   <section id="detailScreen" class="screen">
     <div class="toolbar"><button id="detailBack" class="btn" type="button">← 戻る</button><h2 id="detailTitle"></h2><span></span></div>
     <div id="detailEditor"></div>
     <div class="card"><h3>日別推移</h3><div id="detailChart"></div></div>
+    <div class="card"><h3>週ごとの推移</h3><div id="detailWeekChart"></div></div>
+    <div class="card"><h3>月ごとの推移</h3><div id="detailMonthChart"></div></div>
   </section>
 
   <section id="workoutScreen" class="screen">
     <div class="toolbar"><button id="workoutBack" class="btn" type="button">← 戻る</button><h2>筋トレ</h2><button id="showAddExercise" class="btn primary" type="button">＋ 種目</button></div>
     <div id="workoutDaySummary" class="card"></div>
+    <div class="card"><h3>筋トレの実施推移</h3><div id="workoutPeriods" class="period-tabs"></div><div id="workoutTrendChart"></div></div>
     <div class="card"><h3>直近7日の部位</h3><div id="muscleHistory"></div></div>
     <div id="addExerciseCard" class="card" hidden>
       <h3>種目を追加</h3>
@@ -237,6 +253,9 @@
   let editingSets = [];
   let calendarSelectedDate = today;
   let calendarMonth = today.slice(0,7);
+  let overviewPeriod = 'day';
+  let workoutPeriod = 'day';
+  let datePagerTimer;
 
   const $ = s => document.querySelector(s);
   const selectedDateInput = $('#selectedDate');
@@ -252,6 +271,7 @@
       habits:defaultHabitDefinitions(),
       exercises:[],
       workouts:{},
+      workoutRest:{},
       durationSessions:{},
       legacyDurationEntries:{},
       migrations:{walkReadToScoreV1:true},
@@ -301,6 +321,7 @@
       habits,
       exercises,
       workouts: parsed?.workouts || {},
+      workoutRest: parsed?.workoutRest || {},
       durationSessions,
       legacyDurationEntries,
       migrations,
@@ -349,7 +370,7 @@
   function entryLabel(habit, value){
     if(value===undefined || value===null || value==='') return '未記録';
     if(habit.kind==='duration') return durationLabel(value);
-    if(habit.kind==='weight') return `${Number(value).toFixed(1)} kg`;
+    if(habit.kind==='weight') return value==='skipped'?'測らなかった':`${Number(value).toFixed(1)} kg`;
     if(habit.kind==='score') return `${value} / 2`;
     if(habit.kind==='tasks') return data.taskScores[selectedDate]===undefined?'未評価':`${data.taskScores[selectedDate]} / 2`;
     if(habit.kind==='wake' || habit.kind==='bed') return value.time || '未記録';
@@ -555,20 +576,44 @@
 
   function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $('#'+id).classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); updateGlobalTimerUi(); }
   function updateNav(which){ $('#navHome').classList.toggle('active',which==='home'); $('#navCalendar').classList.toggle('active',which==='calendar'); $('#navSettings').classList.toggle('active',which==='settings'); }
+  function shiftDate(date,delta){const d=new Date(date+'T12:00:00');d.setDate(d.getDate()+delta);return isoDate(d);}
+  function selectDate(date){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
+    selectedDate=date>today?today:date;selectedDateInput.value=selectedDate;renderHome();
+  }
+  function renderDatePager(){
+    const pager=$('#datePager');$('#dateNext').disabled=selectedDate>=today;$('#dateToday').disabled=selectedDate===today;
+    if(pager.dataset.date===selectedDate)return;
+    clearTimeout(datePagerTimer);pager.dataset.date=selectedDate;pager.innerHTML='';
+    [-1,0,1].forEach(delta=>{
+      const date=shiftDate(selectedDate,delta);if(date>today)return;
+      const b=document.createElement('button');b.type='button';b.className='date-page';b.dataset.date=date;
+      b.textContent=date.replaceAll('-','/')+'（'+['日','月','火','水','木','金','土'][new Date(date+'T12:00:00').getDay()]+'）';
+      if(delta===0)b.setAttribute('aria-current','date');b.addEventListener('click',()=>selectDate(date));pager.appendChild(b);
+    });
+    // Set synchronously: a programmatic recenter must not be mistaken for a swipe.
+    pager.scrollLeft=pager.clientWidth;
+    requestAnimationFrame(()=>{if(pager.clientWidth)pager.scrollLeft=pager.clientWidth;});
+  }
+  function settleDatePager(){
+    const pager=$('#datePager');if(!pager.clientWidth)return;
+    const page=pager.children[Math.round(pager.scrollLeft/pager.clientWidth)];
+    if(page&&page.dataset.date!==selectedDate)selectDate(page.dataset.date);
+  }
   function renderDailySummary(){
     const day=getDay(selectedDate);const durationHabits=data.habits.filter(h=>h.kind==='duration');const totalMinutes=durationHabits.reduce((sum,h)=>sum+Math.max(0,Number(day[h.id]||0)),0);
     const scoreHabits=data.habits.filter(h=>h.kind==='score');const score=scoreHabits.reduce((sum,h)=>sum+(Number.isFinite(Number(day[h.id]))?Number(day[h.id]):0),0);const max=scoreHabits.length*2;
     $('#dailySummary').innerHTML=`<h3>${fmtDate(selectedDate)} の全体</h3><div class="daily-summary"><div class="metric"><span>総活動時間</span><b>${durationLabel(totalMinutes)}</b></div><div class="metric"><span>0 / 1 / 2 得点</span><b>${score} / ${max}</b></div></div>`;
   }
   function renderHome(){
-    syncToday();renderDailySummary();
+    syncToday();renderDatePager();renderDailySummary();renderOverviewCharts();
     const list=$('#habitList'); list.innerHTML=''; const day=getDay(selectedDate);
     data.habits.forEach(h=>{
       const b=document.createElement('button'); b.type='button'; b.className='row';
       const left=document.createElement('div'); const name=document.createElement('strong'); name.textContent=h.label; const sub=document.createElement('small'); sub.textContent=h.kind==='tasks'?'To do登録・期限・チェック・進捗評価':'タップして記録・推移を確認'; left.append(name,sub);
       const value=document.createElement('div'); value.className='value';
       if(h.kind==='workout'){
-        const s=workoutSummary(selectedDate); value.textContent=s.ex?`${s.ex}種目・${s.sets}セット`:'未記録'; if(!s.ex)value.classList.add('muted');
+        const s=workoutSummary(selectedDate); value.textContent=s.ex?`${s.ex}種目・${s.sets}セット`:data.workoutRest[selectedDate]?'休憩日':'未記録'; if(!s.ex&&!data.workoutRest[selectedDate])value.classList.add('muted');
       }else if(h.kind==='tasks'){
         const open=data.tasks.filter(t=>!t.done).length,score=data.taskScores[selectedDate];value.textContent=score===undefined?`未評価・残り${open}件`:`${score} / 2・残り${open}件`;if(score===undefined)value.classList.add('muted');
       }else{
@@ -639,8 +684,15 @@
     }
 
     if(h.kind==='weight'){
-      const f=document.createElement('div');f.className='field';f.innerHTML='<label>体重 (kg)</label>';const inp=document.createElement('input');inp.type='number';inp.step='0.1';inp.min='20';inp.max='300';inp.inputMode='decimal';inp.value=day[h.id]??'';f.appendChild(inp);card.appendChild(f);const save=makeButton('保存','primary');save.style.width='100%';save.addEventListener('click',()=>{const v=Number(inp.value);if(!Number.isFinite(v)||v<20||v>300){toast('体重を確認してください');return;}day[h.id]=Math.round(v*10)/10;persist();renderHabitChart();renderHome();toast('保存しました');});card.appendChild(save);
+      const f=document.createElement('div');f.className='field';f.innerHTML='<label for="weightInput">体重 (kg)</label>';
+      const inp=document.createElement('input');inp.id='weightInput';inp.type='number';inp.step='0.1';inp.min='20';inp.max='300';inp.inputMode='decimal';inp.value=day[h.id]==='skipped'?'':day[h.id]??'';f.appendChild(inp);card.appendChild(f);
+      const actions=document.createElement('div');actions.className='actions';const save=makeButton('保存','primary'),skip=makeButton('測らなかった',day[h.id]==='skipped'?'primary':'');
+      save.addEventListener('click',()=>{const v=Number(inp.value);if(!Number.isFinite(v)||v<20||v>300){toast('体重を確認してください');return;}day[h.id]=Math.round(v*10)/10;persist();renderHabitEditor();renderHabitChart();renderHome();toast('保存しました');});
+      skip.addEventListener('click',()=>{if(typeof day[h.id]==='number'&&!confirm('この日の体重を「測らなかった」に変更しますか？'))return;day[h.id]='skipped';persist();renderHabitEditor();renderHabitChart();renderHome();toast('測らなかったと記録しました');});
+      skip.setAttribute('aria-pressed',String(day[h.id]==='skipped'));actions.append(save,skip);card.appendChild(actions);
+      if(day[h.id]==='skipped'){const status=document.createElement('p');status.className='help';status.textContent='この日は測らなかったと記録済みです。体重の平均には含めません。';card.appendChild(status);}
     }
+
 
     if(h.kind==='wake'||h.kind==='bed'){
       const base=getBaselineFor(selectedDate),existing=day[h.id];const f=document.createElement('div');f.className='field';f.innerHTML=`<label>${h.kind==='wake'?'起床':'就寝'}時刻</label>`;const inp=document.createElement('input');inp.type='time';inp.value=existing?.time||'';f.appendChild(inp);card.appendChild(f);const info=document.createElement('p');info.className='help';info.textContent=`この日の基準：${h.kind==='wake'?base.wake:base.bed}。基準より早い場合は負、遅い場合は正の差分で表示します。`;card.appendChild(info);const save=makeButton('保存','primary');save.style.width='100%';save.addEventListener('click',()=>{if(!inp.value){toast('時刻を入力してください');return;}const active=getBaselineFor(selectedDate),baseline=h.kind==='wake'?active.wake:active.bed,diff=sleepDifference(h.kind,inp.value,baseline);day[h.id]={time:inp.value,baseline,diff};persist();renderHabitEditor();renderHabitChart();renderHome();toast('保存しました');});card.appendChild(save);if(existing?.time){const baseline=existing.baseline||(h.kind==='wake'?base.wake:base.bed),diff=sleepDifference(h.kind,existing.time,baseline);const pill=document.createElement('div');pill.style.marginTop='10px';pill.innerHTML=`<span class="pill">基準との差 ${signedMinutesLabel(diff)}</span>`;card.appendChild(pill);}
@@ -654,31 +706,134 @@
   function fieldSelect(label,id,options,value){ const wrap=document.createElement('div'); wrap.className='field'; const lab=document.createElement('label'); lab.textContent=label; const select=document.createElement('select'); select.id=id; options.forEach(o=>{const op=document.createElement('option');op.value=o.v;op.textContent=o.t;select.appendChild(op)}); select.value=String(value); wrap.append(lab,select); return {wrap,select}; }
   function makeButton(text,cls=''){const b=document.createElement('button');b.type='button';b.className=`btn ${cls}`;b.textContent=text;return b;}
 
-  function habitSeries(h){
-    const dates=lastNDates(selectedDate,30);return dates.map(date=>{let y=null;if(h.kind==='tasks'){const v=data.taskScores[date];if(v!==undefined)y=Number(v);}else{const v=data.entries[date]?.[h.id];if(v!==undefined){if(h.kind==='wake'||h.kind==='bed'){if(v&&v.time&&v.baseline)y=sleepDifference(h.kind,v.time,v.baseline);else y=Number(v?.diff??v?.delay??0);}else y=Number(v);}}return{date,y};});
+  function habitValue(h,date){
+    const v=h.kind==='tasks'?data.taskScores[date]:data.entries[date]?.[h.id];
+    if(v===undefined||v===null||v===''||v==='skipped')return null;
+    if(h.kind==='wake'||h.kind==='bed'){
+      const base=getBaselineFor(date);
+      return v.time?sleepDifference(h.kind,v.time,v.baseline||(h.kind==='wake'?base.wake:base.bed)):Number(v.diff??v.delay??0);
+    }
+    const n=Number(v);return Number.isFinite(n)?n:null;
+  }
+  function habitSeries(h,dates=lastNDates(selectedDate,30)){
+    return dates.map(date=>({date,y:habitValue(h,date)}));
+  }
+  function aggregateSeries(series,mode,reducer='sum'){
+    const groups=new Map();
+    series.forEach(p=>{
+      if(p.date>selectedDate||p.y===null||!Number.isFinite(p.y))return;
+      const key=mode==='week'?weekStart(p.date):p.date.slice(0,7)+'-01';
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push(p.y);
+    });
+    return [...groups].sort(([a],[b])=>a.localeCompare(b)).map(([date,values])=>({date,y:values.reduce((a,b)=>a+b,0)/(reducer==='mean'?values.length:1)}));
+  }
+  function periodSeries(series,mode,reducer='sum'){
+    if(mode==='day'){
+      const byDate=new Map(series.map(p=>[p.date,p.y]));
+      return lastNDates(selectedDate,30).map(date=>({date,y:byDate.get(date)??null}));
+    }
+    const byPeriod=new Map(aggregateSeries(series,mode,reducer).map(p=>[p.date,p.y]));
+    return Array.from({length:12},(_,i)=>{
+      const date=mode==='week'?shiftDate(weekStart(selectedDate),(i-11)*7):monthShift(selectedDate.slice(0,7),i-11)+'-01';
+      return {date,y:byPeriod.get(date)??null,label:mode==='month'?date.slice(0,7):fmtDate(date)};
+    });
   }
   function scrollChartToLatest(container){requestAnimationFrame(()=>{const wrap=container?.querySelector('.chart-wrap');if(wrap)wrap.scrollLeft=wrap.scrollWidth;});}
   function renderHabitChart(){
-    const h=currentHabit;let unit='';if(h.kind==='weight')unit='kg';else if(h.kind==='duration'||h.kind==='wake'||h.kind==='bed')unit='分';else unit='0–2';const box=$('#detailChart');box.innerHTML=chartHTML(habitSeries(h),unit,(h.kind==='score'||h.kind==='tasks')?{min:0,max:2}:null,'過去30日');scrollChartToLatest(box);
+    const h=currentHabit,mean=['weight','wake','bed'].includes(h.kind);
+    const unit=h.kind==='weight'?'kg':['duration','wake','bed'].includes(h.kind)?'分':'点';
+    const fixed=['score','tasks'].includes(h.kind)?{min:0,max:2}:null;
+    const dates=Object.keys(h.kind==='tasks'?data.taskScores:data.entries).filter(d=>d<=selectedDate).sort();
+    const all=habitSeries(h,dates);
+    [['detailChart','day'],['detailWeekChart','week'],['detailMonthChart','month']].forEach(([id,mode])=>{
+      const box=$('#'+id),caption=mode==='day'?'過去30日':(mode==='week'?'直近12週（月曜始まり）':'直近12か月')+(mean?'・記録日の平均':'・合計');
+      box.innerHTML=chartHTML(periodSeries(all,mode,mean?'mean':'sum'),unit,mode==='day'?fixed:null,caption+'／未記録日は除外');
+      scrollChartToLatest(box);
+    });
+  }
+  function renderPeriodTabs(id,current,onChange){
+    const box=$('#'+id);box.innerHTML='';
+    [['day','日別'],['week','週別'],['month','月別']].forEach(([mode,label])=>{
+      const b=makeButton(label,mode===current?'selected':'');b.setAttribute('aria-pressed',String(mode===current));
+      b.addEventListener('click',()=>onChange(mode));box.appendChild(b);
+    });
+  }
+  function overallSeries(kind){
+    const habits=data.habits.filter(h=>h.kind===kind);
+    return Object.keys(data.entries).filter(d=>d<=selectedDate).sort().map(date=>{
+      const values=habits.map(h=>habitValue(h,date)).filter(v=>v!==null);
+      return {date,y:values.length?values.reduce((a,b)=>a+b,0):null};
+    });
+  }
+  function renderOverviewCharts(){
+    renderPeriodTabs('overviewPeriods',overviewPeriod,mode=>{overviewPeriod=mode;renderOverviewCharts();});
+    const caption=overviewPeriod==='day'?'過去30日':overviewPeriod==='week'?'直近12週・週合計（月曜始まり）':'直近12か月・月合計';
+    [['totalTimeChart','duration','分'],['totalScoreChart','score','点']].forEach(([id,kind,unit])=>{
+      const box=$('#'+id);box.innerHTML=chartHTML(periodSeries(overallSeries(kind),overviewPeriod),unit,null,caption+'／記録済みの項目を合計');scrollChartToLatest(box);
+    });
+  }
+  function renderWorkoutTrend(){
+    renderPeriodTabs('workoutPeriods',workoutPeriod,mode=>{workoutPeriod=mode;renderWorkoutTrend();});
+    const dates=[...new Set([...Object.keys(data.workouts),...Object.keys(data.workoutRest)])].filter(d=>d<=selectedDate).sort();
+    const series=dates.map(date=>{const s=workoutSummary(date);return {date,y:(s.sets||data.workoutRest[date])?s.sets:null};});
+    const caption=workoutPeriod==='day'?'過去30日':workoutPeriod==='week'?'直近12週・週合計（月曜始まり）':'直近12か月・月合計';
+    const box=$('#workoutTrendChart');box.innerHTML=chartHTML(periodSeries(series,workoutPeriod),'セット',null,caption+'／休憩日は0');scrollChartToLatest(box);
   }
   function lastNDates(endDate,n){const [y,m,d]=endDate.split('-').map(Number),end=new Date(y,m-1,d),out=[];for(let i=n-1;i>=0;i--){const x=new Date(end);x.setDate(end.getDate()-i);out.push(isoDate(x));}return out;}
-  function chartHTML(series,unit,fixed,caption){
-    const values=series.filter(p=>p.y!==null&&Number.isFinite(p.y)).map(p=>p.y);if(!values.length)return `<div class="empty">まだ記録がありません</div><div class="legend"><span>${caption}</span><span>${unit}</span></div>`;
-    let min=fixed?fixed.min:Math.min(...values),max=fixed?fixed.max:Math.max(...values);if(min===max){if(min===0)max=1;else if(min>0){min=min*.9;max=max*1.1;}else{min=min*1.1;max=max*.9;}}if(!fixed&&min>0)min=Math.max(0,min-(max-min)*.15);
-    const W=Math.max(620,series.length*34),H=240,L=44,R=16,T=14,B=42,pw=W-L-R,ph=H-T-B;const x=i=>L+(series.length===1?pw/2:pw*i/(series.length-1));const y=v=>T+ph-(v-min)/(max-min)*ph;let svg=`<div class="chart-wrap"><svg class="chart" style="min-width:${W}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="推移グラフ">`;
-    for(let i=0;i<5;i++){const yy=T+ph*i/4,val=max-(max-min)*i/4;svg+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"></line><text x="4" y="${yy+4}">${formatTick(val)}</text>`;}if(min<=0&&max>=0){const zy=y(0);svg+=`<line class="zero" x1="${L}" x2="${W-R}" y1="${zy}" y2="${zy}"></line>`;}
-    const segs=[];let cur=[];series.forEach((p,i)=>{if(p.y===null){if(cur.length)segs.push(cur);cur=[];}else cur.push({x:x(i),y:y(p.y),p});});if(cur.length)segs.push(cur);segs.forEach(seg=>{if(seg.length>1)svg+=`<polyline class="line" points="${seg.map(q=>`${q.x},${q.y}`).join(' ')}"></polyline>`;seg.forEach(q=>svg+=`<circle class="dot" cx="${q.x}" cy="${q.y}" r="4"><title>${q.p.date}: ${q.p.y} ${unit}</title></circle>`);});
-    const labelIdx=[0,Math.round((series.length-1)*.25),Math.round((series.length-1)*.5),Math.round((series.length-1)*.75),series.length-1].filter((v,i,a)=>v>=0&&a.indexOf(v)===i);labelIdx.forEach(i=>{if(series[i])svg+=`<text x="${x(i)}" y="${H-14}" text-anchor="middle">${fmtDate(series[i].date)}</text>`;});svg+='</svg></div>';return `${svg}<div class="legend"><span>${caption}</span><span>${unit}</span></div>`;
+  function chartHTML(series,unit,fixed,caption,options={}){
+    const valid=series.map((p,i)=>({...p,i})).filter(p=>p.y!==null&&Number.isFinite(p.y));
+    if(!valid.length)return '<div class="empty">まだ記録がありません</div><div class="legend"><span>'+escapeHtml(caption)+'</span><span>'+escapeHtml(unit)+'</span></div>';
+    const values=valid.map(p=>p.y);
+    let min=fixed?fixed.min:Math.min(...values),max=fixed?fixed.max:Math.max(...values);
+    if(min===max){const pad=Math.abs(min)*.1||1;min-=pad;max+=pad;if(values[0]>=0)min=Math.max(0,min);}
+    if(!fixed){const pad=(max-min)*.18;min=values.every(v=>v>=0)?Math.max(0,min-pad):min-pad;max+=pad;}
+    const spacing=options.annotate?100:54,W=Math.max(320,112+Math.max(1,series.length-1)*spacing),H=260,L=56,R=56,T=42,B=42,pw=W-L-R,ph=H-T-B;
+    const x=i=>L+(series.length===1?pw/2:pw*i/(series.length-1)),y=v=>T+ph-(v-min)/(max-min)*ph;
+    let svg='<div class="chart-wrap" tabindex="0" role="region" aria-label="'+escapeHtml(caption)+'：横スクロール"><svg class="chart" style="min-width:'+W+'px" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+escapeHtml(caption)+'"><title>'+escapeHtml(caption+'（空白日は前後の記録を線で結んでいます）')+'</title>';
+    for(let i=0;i<5;i++){
+      const yy=T+ph*i/4,val=max-(max-min)*i/4;
+      svg+='<line class="grid" x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'"></line><text x="'+(L-8)+'" y="'+(yy+4)+'" text-anchor="end">'+formatTick(val)+'</text><text x="'+(W-R+8)+'" y="'+(yy+4)+'">'+formatTick(val)+'</text>';
+    }
+    if(min<=0&&max>=0)svg+='<line class="zero" x1="'+L+'" x2="'+(W-R)+'" y1="'+y(0)+'" y2="'+y(0)+'"></line>';
+    if(valid.length>1)svg+='<polyline class="line" points="'+valid.map(p=>x(p.i)+','+y(p.y)).join(' ')+'"></polyline>';
+    const annotated=new Set(options.annotate?valid.slice(-5):[]);
+    valid.forEach(p=>{
+      svg+='<circle class="dot" cx="'+x(p.i)+'" cy="'+y(p.y)+'" r="4"><title>'+escapeHtml(p.date+': '+formatTick(p.y)+' '+unit+(p.detail?' / '+p.detail:''))+'</title></circle>';
+      if(annotated.has(p)){
+        const anchor=series.length===1?'middle':p.i===series.length-1?'end':p.i===0?'start':'middle';
+        svg+='<text class="point-label" x="'+x(p.i)+'" y="'+(y(p.y)-12)+'" text-anchor="'+anchor+'">'+escapeHtml(formatTick(p.y)+' '+unit)+'</text>';
+        if(p.annotation)svg+='<text class="point-label" x="'+x(p.i)+'" y="'+(y(p.y)-26)+'" text-anchor="'+anchor+'">'+escapeHtml(p.annotation)+'</text>';
+      }
+    });
+    series.forEach((p,i)=>{svg+='<text x="'+x(i)+'" y="'+(H-14)+'" text-anchor="middle">'+escapeHtml(p.label||fmtDate(p.date))+'</text>';});
+    return svg+'</svg></div><div class="legend"><span>'+escapeHtml(caption)+'</span><span>'+escapeHtml(unit)+'</span></div>';
   }
+
   function formatTick(n){ return Math.abs(n)>=1000?Math.round(n).toLocaleString():Number.isInteger(n)?n:String(Math.round(n*10)/10); }
 
   function openWorkout(){renderWorkoutList();showScreen('workoutScreen');updateNav('none');}
   function muscleDoneOn(date,group){return data.exercises.some(ex=>ex.muscleGroup===group&&(data.workouts[date]?.[ex.id]||[]).some(validSet));}
   function renderMuscleHistory(){
-    const dates=lastNDates(selectedDate,7).reverse();let html='<div class="muscle-table-wrap"><table class="muscle-table"><thead><tr><th>日付</th>'+MUSCLE_GROUPS.map(g=>`<th>${g}</th>`).join('')+'</tr></thead><tbody>';dates.forEach(date=>{html+=`<tr><td>${fmtDate(date)}</td>`+MUSCLE_GROUPS.map(g=>muscleDoneOn(date,g)?'<td class="done-mark">○</td>':'<td class="not-done-mark">×</td>').join('')+'</tr>';});html+='</tbody></table></div>';$('#muscleHistory').innerHTML=html;
+    const dates=lastNDates(selectedDate,7).reverse();
+    let html='<div class="muscle-table-wrap" tabindex="0" role="region" aria-label="部位別の履歴：右にスクロールすると過去の日付"><table class="muscle-table"><thead><tr><th scope="col">部位</th>'+dates.map(date=>'<th scope="col">'+fmtDate(date)+'</th>').join('')+'</tr></thead><tbody>';
+    MUSCLE_GROUPS.forEach(group=>{html+='<tr><th scope="row">'+group+'</th>'+dates.map(date=>muscleDoneOn(date,group)?'<td class="done-mark">○</td>':data.workoutRest[date]?'<td class="not-done-mark">休</td>':'<td class="not-done-mark">—</td>').join('')+'</tr>';});
+    $('#muscleHistory').innerHTML=html+'</tbody></table></div><p class="help">左が最新、右が過去の日付です。○ 実施 ／ 休 休憩日 ／ — 実施記録なし</p>';
   }
+  function toggleWorkoutRest(){
+    if(data.workoutRest[selectedDate])delete data.workoutRest[selectedDate];
+    else{
+      if(workoutSummary(selectedDate).sets){toast('休憩日にするには、この日のセット記録を削除してください');return;}
+      data.workoutRest[selectedDate]=true;
+    }
+    persist();renderWorkoutList();renderHome();toast('保存しました');
+  }
+
   function renderWorkoutList(){
-    const s=workoutSummary(selectedDate);$('#workoutDaySummary').innerHTML=`<h3>${fmtDate(selectedDate)} の筋トレ</h3><div class="summary"><span class="help">記録済み</span><b>${s.ex}種目・${s.sets}セット</b></div>`;renderMuscleHistory();const list=$('#exerciseList');list.innerHTML='';if(!data.exercises.length){list.innerHTML='<div class="empty">まだ種目がありません。「＋ 種目」から追加してください。</div>';return;}
+    const s=workoutSummary(selectedDate);$('#workoutDaySummary').innerHTML=`<h3>${fmtDate(selectedDate)} の筋トレ</h3><div class="summary"><span class="help">記録済み</span><b>${s.ex}種目・${s.sets}セット</b></div>`;const restButton=makeButton(data.workoutRest[selectedDate]?'休憩日を取り消す':'休憩する',data.workoutRest[selectedDate]?'primary':'');
+    restButton.style.marginTop='12px';restButton.addEventListener('click',toggleWorkoutRest);$('#workoutDaySummary').appendChild(restButton);
+    if(data.workoutRest[selectedDate]){const p=document.createElement('p');p.className='help';p.textContent='この日は休憩日です。セットを保存すると実施日に切り替わります。';$('#workoutDaySummary').appendChild(p);}
+    renderMuscleHistory();renderWorkoutTrend();const list=$('#exerciseList');list.innerHTML='';if(!data.exercises.length){list.innerHTML='<div class="empty">まだ種目がありません。「＋ 種目」から追加してください。</div>';return;}
     const groups=[...MUSCLE_GROUPS];if(data.exercises.some(ex=>!ex.muscleGroup))groups.push('');groups.forEach(group=>{const items=data.exercises.filter(ex=>ex.muscleGroup===group);if(!items.length)return;const block=document.createElement('div');block.className='group-block';const head=document.createElement('div');head.className='group-heading';head.innerHTML=`<b>${group||'部位未設定'}</b><span>${items.length}種目</span>`;block.appendChild(head);const sublist=document.createElement('div');sublist.className='list';items.forEach(ex=>{const wrap=document.createElement('div');wrap.className='exercise-row';const row=document.createElement('button');row.type='button';row.className='row';const daySets=data.workouts[selectedDate]?.[ex.id]||[],valid=daySets.filter(validSet);const left=document.createElement('div');left.innerHTML=`<strong>${escapeHtml(ex.name)}</strong><small>${ex.type==='bodyweight'?'自重種目':'重量種目'}${ex.muscleGroup?'・'+ex.muscleGroup:''}</small>`;const val=document.createElement('div');val.className='value'+(valid.length?'':' muted');val.textContent=valid.length?`${valid.length}セット`:'未記録';row.append(left,val);row.addEventListener('click',()=>openExercise(ex.id));const menu=document.createElement('button');menu.type='button';menu.className='tiny';menu.textContent='⋯';menu.addEventListener('click',()=>exerciseMenu(ex.id));wrap.append(row,menu);sublist.appendChild(wrap);});block.appendChild(sublist);list.appendChild(block);});
   }
   function exerciseMenu(id){
@@ -689,18 +844,36 @@
     const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;$('#exerciseDateLabel').textContent=`${fmtDate(selectedDate)} のセット${ex.muscleGroup?'・'+ex.muscleGroup:''}`;$('#setHeader').innerHTML=ex.type==='bodyweight'?'<div class="set-head body"><div></div><div>回数</div><div></div></div>':'<div class="set-head"><div></div><div>重量 kg</div><div>回数</div><div></div></div>';const box=$('#sets');box.innerHTML='';editingSets.forEach((s,i)=>{const row=document.createElement('div');row.className='set-row'+(ex.type==='bodyweight'?' body':'');const no=document.createElement('div');no.className='set-no';no.textContent=i+1;row.appendChild(no);if(ex.type!=='bodyweight'){const w=document.createElement('input');w.type='number';w.min='0';w.step='0.5';w.inputMode='decimal';w.placeholder='重量';w.value=s.weight??'';w.addEventListener('input',()=>{s.weight=w.value;updateVolume();});row.appendChild(w);}const r=document.createElement('input');r.type='number';r.min='0';r.step='1';r.inputMode='numeric';r.placeholder='回数';r.value=s.reps??'';r.addEventListener('input',()=>{s.reps=r.value;updateVolume();});row.appendChild(r);const del=document.createElement('button');del.type='button';del.className='icon-btn';del.textContent='×';del.addEventListener('click',()=>{editingSets.splice(i,1);if(!editingSets.length)editingSets=[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}];renderSets();});row.appendChild(del);box.appendChild(row);});updateVolume();
   }
   function exerciseMetrics(ex,arr){
-    const valid=(arr||[]).filter(validSet);if(!valid.length)return null;if(ex.type==='bodyweight'){return{total:valid.reduce((a,s)=>a+(Number(s.reps)||0),0),maxSet:Math.max(...valid.map(s=>Number(s.reps)||0)),unit:'回'};}return{total:valid.reduce((a,s)=>a+(Number(s.weight)||0)*(Number(s.reps)||0),0),maxSet:Math.max(...valid.map(s=>(Number(s.weight)||0)*(Number(s.reps)||0))),unit:'kg'};
+    const valid=(arr||[]).filter(validSet);if(!valid.length)return null;if(ex.type==='bodyweight'){return{total:valid.reduce((a,s)=>a+(Number(s.reps)||0),0),maxSet:Math.max(...valid.map(s=>Number(s.reps)||0)),unit:'回'};}return{total:valid.reduce((a,s)=>a+(Number(s.weight)||0)*(Number(s.reps)||0),0),maxSet:Math.max(...valid.map(s=>(Number(s.weight)||0)*(Number(s.reps)||0))),unit:'kg・回'};
   }
   function updateVolume(){
-    const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const m=exerciseMetrics(ex,editingSets)||{total:0,maxSet:0,unit:ex.type==='bodyweight'?'回':'kg'};if(ex.type==='bodyweight'){$('#volumeLabel').textContent='合計回数';$('#maxSetLabel').textContent='最大セット回数';}else{$('#volumeLabel').textContent='総ボリューム（片腕種目も片腕換算）';$('#maxSetLabel').textContent='最大セットボリューム';}$('#volumeValue').textContent=`${Math.round(m.total*10)/10} ${m.unit}`;$('#maxSetValue').textContent=`${Math.round(m.maxSet*10)/10} ${m.unit}`;
+    const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const m=exerciseMetrics(ex,editingSets)||{total:0,maxSet:0,unit:ex.type==='bodyweight'?'回':'kg・回'};if(ex.type==='bodyweight'){$('#volumeLabel').textContent='合計回数';$('#maxSetLabel').textContent='最大セット回数';}else{$('#volumeLabel').textContent='総ボリューム（片腕種目も片腕換算）';$('#maxSetLabel').textContent='最大セットボリューム';}$('#volumeValue').textContent=`${Math.round(m.total*10)/10} ${m.unit}`;$('#maxSetValue').textContent=`${Math.round(m.maxSet*10)/10} ${m.unit}`;
   }
   function weekStart(date){const [y,m,d]=date.split('-').map(Number),x=new Date(y,m-1,d),day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return isoDate(x);}
-  function aggregateExercise(ex,mode){
-    const map={};Object.keys(data.workouts).sort().forEach(date=>{if(date>selectedDate)return;const m=exerciseMetrics(ex,data.workouts[date]?.[ex.id]);if(!m)return;const key=mode==='week'?weekStart(date):date.slice(0,7)+'-01';map[key]=(map[key]||0)+m.total;});return Object.entries(map).map(([date,y])=>({date,y})).slice(-12);
+  function exerciseSeries(ex){
+    return Object.keys(data.workouts).filter(date=>date<=selectedDate).sort().flatMap(date=>{
+      const sets=(data.workouts[date]?.[ex.id]||[]).filter(validSet),m=exerciseMetrics(ex,sets);if(!m)return [];
+      const setText=s=>ex.type==='bodyweight'?s.reps+'回':s.weight+'kg × '+s.reps+'回';
+      const best=sets.reduce((a,b)=>(ex.type==='bodyweight'?Number(a.reps):Number(a.weight)*Number(a.reps))>=(ex.type==='bodyweight'?Number(b.reps):Number(b.weight)*Number(b.reps))?a:b);
+      return [{date,y:m.total,maxSet:m.maxSet,annotation:setText(best),detail:sets.map(setText).join(' / ')}];
+    });
   }
+  function aggregateExercise(ex,mode){return periodSeries(exerciseSeries(ex),mode);}
   function renderExerciseChart(){
-    const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const dates=lastNDates(selectedDate,120),daily=[],maxDaily=[];dates.forEach(date=>{const m=exerciseMetrics(ex,data.workouts[date]?.[ex.id]);if(m){daily.push({date,y:m.total});maxDaily.push({date,y:m.maxSet});}});const unit=ex.type==='bodyweight'?'回':'kg';$('#exerciseChartTitle').textContent=ex.type==='bodyweight'?'実施日の合計回数':'実施日の総ボリューム';$('#exerciseMaxChartTitle').textContent=ex.type==='bodyweight'?'最大セット回数の推移':'最大セットボリュームの推移';const dayBox=$('#exerciseChart'),maxBox=$('#exerciseMaxChart'),weekBox=$('#exerciseWeekChart'),monthBox=$('#exerciseMonthChart');dayBox.innerHTML=chartHTML(daily,unit,null,'実施日のみ');maxBox.innerHTML=chartHTML(maxDaily,unit,null,'実施日のみ');weekBox.innerHTML=chartHTML(aggregateExercise(ex,'week'),unit,null,'週ごとの合計');monthBox.innerHTML=chartHTML(aggregateExercise(ex,'month'),unit,null,'月ごとの合計');[dayBox,maxBox,weekBox,monthBox].forEach(scrollChartToLatest);
+    const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;
+    const daily=exerciseSeries(ex),recent=daily.slice(-5),maxDaily=daily.map(p=>({...p,y:p.maxSet}));
+    const unit=ex.type==='bodyweight'?'回':'kg・回';
+    $('#exerciseChartTitle').textContent=ex.type==='bodyweight'?'実施日の合計回数':'実施日の総ボリューム';
+    $('#exerciseMaxChartTitle').textContent=ex.type==='bodyweight'?'最大セット回数の推移':'最大セットボリュームの推移';
+    const dayBox=$('#exerciseChart'),maxBox=$('#exerciseMaxChart'),weekBox=$('#exerciseWeekChart'),monthBox=$('#exerciseMonthChart');
+    dayBox.innerHTML=chartHTML(daily.map(p=>({...p,annotation:''})),unit,null,'実施日を等間隔で表示・直近5回の値を表示',{annotate:true});
+    if(recent.length)dayBox.innerHTML+='<h4>直近5回のセット履歴</h4><div class="history-wrap" tabindex="0" role="region" aria-label="セット履歴：横スクロール"><table class="history-table"><thead><tr><th>日付</th><th>'+(ex.type==='bodyweight'?'回数':'重さ × 回数（各セット）')+'</th><th>合計</th></tr></thead><tbody>'+recent.slice().reverse().map(p=>'<tr><th scope="row">'+escapeHtml(p.date)+'</th><td>'+escapeHtml(p.detail)+'</td><td>'+formatTick(p.y)+' '+unit+'</td></tr>').join('')+'</tbody></table></div>';
+    maxBox.innerHTML=chartHTML(maxDaily,unit,null,'実施日を等間隔で表示・直近5回の重さと回数を表示',{annotate:true});
+    weekBox.innerHTML=chartHTML(aggregateExercise(ex,'week'),unit,null,'直近12週の合計（月曜始まり）');
+    monthBox.innerHTML=chartHTML(aggregateExercise(ex,'month'),unit,null,'直近12か月の合計');
+    [dayBox,maxBox,weekBox,monthBox].forEach(scrollChartToLatest);
   }
+
 
   function habitKindLabel(kind){
     if(kind==='duration') return '作業時間';
@@ -783,7 +956,13 @@
   $('#calendarAddEvent').addEventListener('click',()=>{const title=$('#calendarEventTitle').value.trim(),time=$('#calendarEventTime').value,startDate=$('#calendarEventStart').value,endDate=$('#calendarEventEnd').value;if(!title){toast('予定を入力してください');return;}if(!startDate||!endDate){toast('開始日・終了日を入力してください');return;}if(endDate<startDate){toast('終了日は開始日以降にしてください');return;}const id='event_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),ev={id,title,time,startDate,endDate};datesBetween(startDate,endDate).forEach(date=>{if(!data.calendarEvents[date])data.calendarEvents[date]=[];data.calendarEvents[date].push({...ev});});$('#calendarEventTitle').value='';$('#calendarEventTime').value='';calendarSelectedDate=startDate;calendarMonth=startDate.slice(0,7);persist();renderCalendar();syncCalendarDateInputs();toast('予定を追加しました');});
   $('#globalTimerOpen').addEventListener('click',()=>{const t=data.activeTimer;if(!t)return;selectedDate=today;selectedDateInput.value=today;const h=data.habits.find(x=>x.id===t.habitId);if(h)openHabit(h);});
 
-  $('#selectedDate').addEventListener('change',e=>{ if(!e.target.value)return; if(e.target.value>today){e.target.value=today;selectedDate=today;}else selectedDate=e.target.value; renderHome(); });
+  $('#selectedDate').addEventListener('change',e=>selectDate(e.target.value));
+  $('#datePrev').addEventListener('click',()=>selectDate(shiftDate(selectedDate,-1)));
+  $('#dateNext').addEventListener('click',()=>selectDate(shiftDate(selectedDate,1)));
+  $('#dateToday').addEventListener('click',()=>selectDate(today));
+  $('#datePager').addEventListener('scroll',()=>{clearTimeout(datePagerTimer);datePagerTimer=setTimeout(settleDatePager,180);});
+  $('#datePager').addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();selectDate(shiftDate(selectedDate,e.key==='ArrowLeft'?-1:1));}});
+  window.addEventListener('resize',()=>{clearTimeout(datePagerTimer);$('#datePager').scrollLeft=$('#datePager').clientWidth;});
   $('#detailBack').addEventListener('click',()=>{renderHome();showScreen('homeScreen');updateNav('home');});
   $('#workoutBack').addEventListener('click',()=>{renderHome();showScreen('homeScreen');updateNav('home');});
   $('#exerciseBack').addEventListener('click',()=>{renderWorkoutList();showScreen('workoutScreen');});
@@ -805,7 +984,7 @@
   $('#cancelAddExercise').addEventListener('click',()=>{$('#addExerciseCard').hidden=true;$('#exerciseName').value='';});
   $('#addExercise').addEventListener('click',()=>{const name=$('#exerciseName').value.trim(),type=$('#exerciseType').value,muscleGroup=$('#exerciseMuscleGroup').value;if(!name){toast('種目名を入力してください');return;}if(!MUSCLE_GROUPS.includes(muscleGroup)){toast('部位を選んでください');return;}data.exercises.push({id:'ex_'+Date.now(),name,type,muscleGroup});persist();$('#exerciseName').value='';$('#addExerciseCard').hidden=true;renderWorkoutList();toast('種目を追加しました');});
   $('#addSet').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);editingSets.push(ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''});renderSets();});
-  $('#saveSets').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const cleaned=editingSets.map(s=>ex.type==='bodyweight'?{reps:Number(s.reps)||0}:{weight:Number(s.weight)||0,reps:Number(s.reps)||0}).filter(validSet);if(!data.workouts[selectedDate])data.workouts[selectedDate]={};if(cleaned.length)data.workouts[selectedDate][ex.id]=cleaned;else delete data.workouts[selectedDate][ex.id];persist();editingSets=JSON.parse(JSON.stringify(cleaned.length?cleaned:[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}]));renderSets();renderExerciseChart();renderMuscleHistory();renderHome();toast('保存しました');});
+  $('#saveSets').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const cleaned=editingSets.map(s=>ex.type==='bodyweight'?{reps:Number(s.reps)||0}:{weight:Number(s.weight)||0,reps:Number(s.reps)||0}).filter(validSet);if(!data.workouts[selectedDate])data.workouts[selectedDate]={};if(cleaned.length){data.workouts[selectedDate][ex.id]=cleaned;delete data.workoutRest[selectedDate];}else delete data.workouts[selectedDate][ex.id];persist();editingSets=JSON.parse(JSON.stringify(cleaned.length?cleaned:[ex.type==='bodyweight'?{reps:''}:{weight:'',reps:''}]));renderSets();renderExerciseChart();renderMuscleHistory();renderHome();toast('保存しました');});
   $('#renameExercise').addEventListener('click',()=>{const ex=data.exercises.find(x=>x.id===currentExerciseId);if(!ex)return;const name=prompt('新しい種目名',ex.name);if(name===null)return;const group=prompt(`部位を入力してください：${MUSCLE_GROUPS.join(' / ')}`,ex.muscleGroup||'');if(group===null)return;if(!MUSCLE_GROUPS.includes(group.trim())){toast('部位を確認してください');return;}if(name.trim())ex.name=name.trim();ex.muscleGroup=group.trim();persist();$('#exerciseTitle').textContent=ex.name;renderSets();toast('変更しました');});
 
   $('#saveBaseline').addEventListener('click',()=>{const effectiveDate=$('#effectiveDate').value,wake=$('#wakeBase').value,bed=$('#bedBase').value;if(!effectiveDate||!wake||!bed){toast('すべて入力してください');return;}if(effectiveDate<today){toast('過去日は指定できません');return;} const existing=data.baselines.find(b=>b.effectiveDate===effectiveDate);if(existing){existing.wake=wake;existing.bed=bed;}else data.baselines.push({effectiveDate,wake,bed});data.baselines.sort((a,b)=>a.effectiveDate.localeCompare(b.effectiveDate));persist();renderBaselines();toast('基準を保存しました');});

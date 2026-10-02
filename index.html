@@ -63,11 +63,14 @@
     .global-timer{position:fixed;left:10px;right:10px;bottom:calc(78px + env(safe-area-inset-bottom));max-width:740px;margin:auto;z-index:26;border:1px solid var(--accent);background:var(--card);border-radius:14px;padding:10px 12px;box-shadow:0 4px 18px rgba(0,0,0,.13);display:flex;align-items:center;justify-content:space-between;gap:10px}.global-timer[hidden]{display:none}.global-timer-main{min-width:0}.global-timer-main b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.global-timer-main span{display:block;color:var(--muted);font-size:12px;margin-top:2px}.global-timer-time{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px;white-space:nowrap}
     .muscle-table-wrap{overflow-x:auto}.muscle-table{border-collapse:collapse;min-width:620px;width:100%;font-size:12px}.muscle-table th,.muscle-table td{border:1px solid var(--line);padding:7px 6px;text-align:center}.muscle-table th{background:#fafafa;position:sticky;top:0}.muscle-table td:first-child,.muscle-table th:first-child{text-align:left;white-space:nowrap}.done-mark{color:var(--accent);font-weight:800}.not-done-mark{color:var(--muted)}
     .group-block{margin-top:16px}.group-heading{display:flex;align-items:center;justify-content:space-between;margin:0 4px 7px}.group-heading b{font-size:14px}.group-heading span{font-size:12px;color:var(--muted)}
+    .task-actions{display:grid;gap:5px}.task-edit{grid-column:1/-1;display:grid;gap:8px;min-width:0}.task-edit .field{min-width:0}.task-edit input{width:100%;min-width:0}.task-edit-actions{display:flex;gap:8px}
     .task-add{display:grid;gap:8px}.task-list{display:grid;gap:7px;margin-top:10px}.task-row{display:grid;grid-template-columns:44px minmax(0,1fr) 52px;gap:7px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;background:#fff}.task-row.done .task-title{text-decoration:line-through;color:var(--muted)}.task-title-wrap{min-width:0}.task-title{overflow-wrap:anywhere}.task-meta{font-size:11px;color:var(--muted);margin-top:3px}.task-meta.overdue{color:var(--danger);font-weight:700}.task-check,.task-delete{min-height:40px;border:1px solid var(--line);border-radius:9px;background:#fff;font-weight:800}.task-check.checked{background:var(--accent-soft);color:var(--accent)}.task-delete{color:var(--danger)}.task-section-label{font-size:12px;color:var(--muted);font-weight:700;margin-top:14px}
     .session-info{min-width:0;flex:1}.session-info span{display:block}.session-time{font-weight:700;margin-top:2px}.session-actions{display:flex;gap:5px}.session-actions button{min-height:34px;padding:5px 8px}
     .chart-stack{display:grid;gap:12px}.mini-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.mini-summary .metric b{font-size:18px}
     .calendar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.calendar-head b{font-size:17px}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.calendar-weekday{text-align:center;font-size:11px;color:var(--muted);font-weight:700;padding:4px 0}.calendar-weekday.sun{color:var(--danger)}.calendar-day{position:relative;min-height:76px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px;text-align:left;overflow:hidden}.calendar-day.out{opacity:.36}.calendar-day.selected{border:2px solid var(--accent);padding:3px}.calendar-day.today{background:var(--accent-soft)}.calendar-day.today .day-num{color:var(--accent);font-weight:900}.calendar-day.holiday .day-num,.calendar-day.sunday .day-num{color:var(--danger);font-weight:800}.day-num{font-size:12px}.holiday-name{display:block;color:var(--danger);font-size:8px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}.event-preview{display:block;margin-top:3px;font-size:9px;line-height:1.2;color:var(--accent);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.event-more{display:block;font-size:8px;color:var(--muted);margin-top:1px}.event-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-top:7px}.event-row span{font-size:13px}.event-row button{min-height:34px;border:1px solid var(--line);background:#fff;color:var(--danger);border-radius:8px;font-weight:700}.quick-time{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.quick-time .btn{min-height:38px;padding:6px 9px;font-size:13px}
     @media(max-width:430px){.app{padding-left:10px;padding-right:10px}.top{align-items:flex-start;flex-direction:column}.datebox{width:100%}.two{grid-template-columns:1fr 1fr}.row{padding:11px 12px}.toolbar h2{font-size:18px}}
+    .repeat-toggle{display:flex;align-items:center;gap:8px;min-height:44px;font-weight:700}.repeat-toggle input,.repeat-weekdays input{width:20px;height:20px;accent-color:var(--accent)}
+    .repeat-options{border:1px solid var(--line);border-radius:12px;padding:12px;margin:6px 0}.repeat-weekdays{border:0;padding:0;margin:12px 0;display:flex;gap:6px;flex-wrap:wrap}.repeat-weekdays[hidden],.repeat-options[hidden]{display:none}.repeat-weekdays legend{font-size:13px;color:var(--muted);margin-bottom:6px}.repeat-weekdays label{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:8px;padding:6px;min-height:44px;font-size:13px}.task-meta{overflow-wrap:anywhere}
   </style>
 </head>
 <body>
@@ -615,7 +618,7 @@
       if(h.kind==='workout'){
         const s=workoutSummary(selectedDate); value.textContent=s.ex?`${s.ex}種目・${s.sets}セット`:data.workoutRest[selectedDate]?'休憩日':'未記録'; if(!s.ex&&!data.workoutRest[selectedDate])value.classList.add('muted');
       }else if(h.kind==='tasks'){
-        const open=data.tasks.filter(t=>!t.done).length,score=data.taskScores[selectedDate];value.textContent=score===undefined?`未評価・残り${open}件`:`${score} / 2・残り${open}件`;if(score===undefined)value.classList.add('muted');
+        const open=taskOccurrences(data.tasks,selectedDate).filter(t=>!t.done).length,score=data.taskScores[selectedDate];value.textContent=score===undefined?`未評価・残り${open}件`:`${score} / 2・残り${open}件`;if(score===undefined)value.classList.add('muted');
       }else{
         const v=day[h.id];
         if(h.kind==='duration' && activeTimerFor(h.id)){const t=activeTimerFor(h.id); value.textContent=`${t.startedAt?'計測中':'一時停止'} ${timerClock(timerElapsedMs(t))}`;}
@@ -626,6 +629,62 @@
     updateGlobalTimerUi();
   }
 
+  function recurringDateMatches(rule,date){
+    if(date<rule.startDate||(rule.endDate&&date>rule.endDate))return false;
+    const d=new Date(date+'T12:00:00');
+    if(rule.frequency==='daily')return true;
+    if(rule.frequency==='weekly')return (rule.weekdays||[]).includes(d.getDay());
+    if(rule.frequency==='monthly'){
+      const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+      return d.getDate()===Math.min(Number(rule.startDate.slice(8,10)),last);
+    }
+    return false;
+  }
+  function taskOccurrences(tasks,date){
+    return tasks.flatMap(task=>{
+      const rule=task.recurrence;if(!rule)return [task];
+      const rows=[];
+      const add=dueDate=>rows.push({...task,dueDate,occurrenceDate:dueDate,done:!!task.completions?.[dueDate],completedAt:task.completions?.[dueDate]||null});
+      const end=rule.endDate&&rule.endDate<date?rule.endDate:date;
+      for(let d=rule.startDate;d&&d<=end;d=shiftDate(d,1)){if(recurringDateMatches(rule,d))add(d);}
+      // Show only the next scheduled occurrence; future repetitions are generated as dates advance.
+      let next=rule.startDate>date?rule.startDate:shiftDate(date,1);
+      for(let i=0;i<32;i++,next=shiftDate(next,1)){
+        if(rule.endDate&&next>rule.endDate)break;
+        if(recurringDateMatches(rule,next)){add(next);break;}
+      }
+      return rows;
+    });
+  }
+  function recurrenceLabel(rule){
+    const frequency=rule.frequency==='daily'?'毎日':rule.frequency==='weekly'?'毎週 '+(rule.weekdays||[]).map(d=>['日','月','火','水','木','金','土'][d]).join('・')+'曜':'毎月 '+Number(rule.startDate.slice(8,10))+'日（ない月は月末）';
+    return frequency+' ／ '+rule.startDate+'〜'+(rule.endDate||'終了日なし');
+  }
+  function recurrenceFields(startInput,startLabel,initial=null){
+    const wrap=document.createElement('div');wrap.className='recurrence-fields';
+    const toggleLabel=document.createElement('label');toggleLabel.className='repeat-toggle';
+    const toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=!!initial;toggleLabel.append(toggle,document.createTextNode('繰り返し'));wrap.appendChild(toggleLabel);
+    const options=document.createElement('div');options.className='repeat-options';
+    const frequencyLabel=document.createElement('label');frequencyLabel.className='field';frequencyLabel.appendChild(document.createTextNode('繰り返す間隔'));
+    const frequency=document.createElement('select');[['daily','毎日'],['weekly','毎週'],['monthly','毎月']].forEach(([value,text])=>{const option=document.createElement('option');option.value=value;option.textContent=text;frequency.appendChild(option);});frequency.value=initial?.frequency||'daily';frequencyLabel.appendChild(frequency);
+    const weekdays=document.createElement('fieldset');weekdays.className='repeat-weekdays';const legend=document.createElement('legend');legend.textContent='曜日（1つ以上）';weekdays.appendChild(legend);
+    const chosen=new Set(initial?.weekdays||[]);
+    [1,2,3,4,5,6,0].forEach(day=>{const label=document.createElement('label');const input=document.createElement('input');input.type='checkbox';input.value=String(day);input.checked=chosen.has(day);input.addEventListener('change',()=>input.checked?chosen.add(day):chosen.delete(day));label.append(input,document.createTextNode(['日','月','火','水','木','金','土'][day]+'曜'));weekdays.appendChild(label);});
+    const endLabel=document.createElement('label');endLabel.className='field';endLabel.appendChild(document.createTextNode('繰り返しの終了日（任意）'));const end=document.createElement('input');end.type='date';end.value=initial?.endDate||'';endLabel.appendChild(end);
+    const help=document.createElement('p');help.className='help';
+    options.append(frequencyLabel,weekdays,endLabel,help);wrap.appendChild(options);
+    const refresh=()=>{options.hidden=!toggle.checked;weekdays.hidden=frequency.value!=='weekly';startLabel.textContent=toggle.checked?'繰り返しの開始日（必須）':'期限（必須）';end.min=startInput.value;help.textContent=(frequency.value==='monthly'?'開始日と同じ日に繰り返します。その日がない月は月末になります。':'選択した日ごとに、個別に完了をチェックできます。')+' 終了日も対象に含みます。空欄なら期限なしです。';};
+    toggle.addEventListener('change',refresh);frequency.addEventListener('change',refresh);startInput.addEventListener('input',refresh);refresh();
+    return {wrap,toggle,read:()=>{
+      if(!toggle.checked)return {rule:null};
+      if(!startInput.value||!startInput.validity.valid)return {error:'開始日を入力してください'};
+      if(frequency.value==='weekly'&&!chosen.size)return {error:'曜日を1つ以上選んでください'};
+      if(end.value&&(!end.validity.valid||end.value<startInput.value))return {error:'終了日は開始日以降にしてください'};
+      const rule={frequency:frequency.value,startDate:startInput.value,endDate:end.value,weekdays:[...chosen].sort((a,b)=>a-b)};
+      if(rule.endDate){let hasDate=false;for(let d=rule.startDate,i=0;d<=rule.endDate&&i<32;d=shiftDate(d,1),i++){if(recurringDateMatches(rule,d)){hasDate=true;break;}}if(!hasDate)return {error:'開始日から終了日までに、選択した曜日がありません'};}
+      return {rule};
+    }};
+  }
   function openHabit(h){ currentHabit=h; $('#detailTitle').textContent=h.label; renderHabitEditor(); renderHabitChart(); showScreen('detailScreen'); updateNav('none'); }
   function renderHabitEditor(){
     const h=currentHabit, day=getDay(selectedDate), box=$('#detailEditor'); box.innerHTML='';
@@ -646,14 +705,72 @@
       const taskTitle=document.createElement('h3');taskTitle.style.marginTop='18px';taskTitle.textContent='To do';card.appendChild(taskTitle);
       const addWrap=document.createElement('div');addWrap.className='task-add';
       const titleField=document.createElement('div');titleField.className='field';titleField.innerHTML='<label>やること</label>';const inp=document.createElement('input');inp.placeholder='例：レポート提出';inp.maxLength=100;titleField.appendChild(inp);
-      const dueField=document.createElement('div');dueField.className='field';dueField.innerHTML='<label>期限（必須）</label>';const due=document.createElement('input');due.type='date';due.value=today;dueField.appendChild(due);
-      const add=makeButton('To doを追加','primary');add.style.width='100%';addWrap.append(titleField,dueField,add);card.appendChild(addWrap);
-      const addTask=()=>{const title=inp.value.trim();if(!title){toast('To doを入力してください');return;}if(!due.value){toast('期限を入力してください');return;}data.tasks.push({id:'task_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),title,dueDate:due.value,done:false,createdAt:new Date().toISOString(),completedAt:null});inp.value='';due.value=today;persist();renderHabitEditor();renderHome();};add.addEventListener('click',addTask);inp.addEventListener('keydown',e=>{if(e.key==='Enter')addTask();});
+      const dueField=document.createElement('div');dueField.className='field';dueField.innerHTML='<label for="taskDueDate">期限（必須）</label>';const due=document.createElement('input');due.id='taskDueDate';due.type='date';due.value=today;dueField.appendChild(due);
+      const repeat=recurrenceFields(due,dueField.querySelector('label'));
+      const add=makeButton('To doを追加','primary');add.style.width='100%';addWrap.append(titleField,dueField,repeat.wrap,add);card.appendChild(addWrap);
+      const addTask=()=>{
+        const title=inp.value.trim();if(!title){toast('To doを入力してください');return;}if(!due.value||!due.validity.valid){toast('期限を入力してください');return;}
+        const result=repeat.read();if(result.error){toast(result.error);return;}
+        const task={id:'task_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),title,dueDate:due.value,done:false,createdAt:new Date().toISOString(),completedAt:null};
+        if(result.rule){task.recurrence=result.rule;task.completions={};}data.tasks.push(task);
+        persist();renderHabitEditor();renderHome();toast('To doを追加しました');
+      };add.addEventListener('click',addTask);inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)addTask();});
       const list=document.createElement('div');list.className='task-list';
-      const undone=data.tasks.filter(t=>!t.done).sort((a,b)=>String(a.dueDate||'9999-12-31').localeCompare(String(b.dueDate||'9999-12-31'))||String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
-      const done=data.tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
-      const renderTaskRows=(rows,labelText)=>{if(!rows.length)return;const lab=document.createElement('div');lab.className='task-section-label';lab.textContent=labelText;list.appendChild(lab);rows.forEach(t=>{const row=document.createElement('div');row.className='task-row'+(t.done?' done':'');const check=document.createElement('button');check.type='button';check.className='task-check'+(t.done?' checked':'');check.textContent=t.done?'✓':'○';check.addEventListener('click',()=>{t.done=!t.done;t.completedAt=t.done?new Date().toISOString():null;persist();renderHabitEditor();renderHome();});const titleWrap=document.createElement('div');titleWrap.className='task-title-wrap';const title=document.createElement('div');title.className='task-title';title.textContent=t.title;const meta=document.createElement('div');meta.className='task-meta'+(!t.done&&t.dueDate&&t.dueDate<today?' overdue':'');meta.textContent=t.dueDate?`期限 ${t.dueDate}`:'期限未設定（旧データ）';titleWrap.append(title,meta);const del=document.createElement('button');del.type='button';del.className='task-delete';del.textContent='削除';del.addEventListener('click',()=>{if(!confirm(`「${t.title}」を永久に削除しますか？`))return;data.tasks=data.tasks.filter(x=>x.id!==t.id);persist();renderHabitEditor();renderHome();toast('削除しました');});row.append(check,titleWrap,del);list.appendChild(row);});};
-      renderTaskRows(undone,'未完了');renderTaskRows(done,'完了済み');if(!data.tasks.length){const e=document.createElement('div');e.className='empty';e.textContent='まだTo doがありません';list.appendChild(e);}card.appendChild(list);
+      const occurrences=taskOccurrences(data.tasks,selectedDate);
+      const undone=occurrences.filter(t=>!t.done).sort((a,b)=>String(a.dueDate||'9999-12-31').localeCompare(String(b.dueDate||'9999-12-31'))||String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
+      const done=occurrences.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
+      const openTaskEditor=(t,row,edit)=>{
+        if(row.querySelector('.task-edit'))return;
+        const source=data.tasks.find(task=>task.id===t.id);
+        const form=document.createElement('form');form.className='task-edit';
+        const contentField=document.createElement('div');contentField.className='field';
+        const contentLabel=document.createElement('label');contentLabel.textContent='内容';
+        const content=document.createElement('input');content.type='text';content.maxLength=100;content.value=t.title;content.required=true;contentLabel.appendChild(content);contentField.appendChild(contentLabel);
+        const dateField=document.createElement('div');dateField.className='field';
+        const dateLabel=document.createElement('label');dateLabel.textContent='期限（必須）';
+        const date=document.createElement('input');date.type='date';date.value=t.recurrence?.startDate||t.dueDate||'';date.required=true;dateLabel.appendChild(date);dateField.appendChild(dateLabel);
+        let repeatEditor=null;
+        if(t.recurrence){
+          const labelText=document.createElement('span');dateLabel.firstChild.replaceWith(labelText);
+          repeatEditor=recurrenceFields(date,labelText,t.recurrence);repeatEditor.toggle.disabled=true;
+          const note=document.createElement('p');note.className='help';note.textContent='繰り返し全体を編集します。各回の完了履歴は日付ごとに保持します。';form.appendChild(note);
+        }
+        const actions=document.createElement('div');actions.className='task-edit-actions';
+        const save=makeButton('保存','primary');save.type='submit';
+        const cancel=makeButton('キャンセル');
+        const close=()=>{form.remove();edit.disabled=false;edit.focus();};
+        cancel.addEventListener('click',close);
+        form.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}});
+        form.addEventListener('submit',e=>{
+          e.preventDefault();const title=content.value.trim();
+          if(!title){toast('To doを入力してください');content.focus();return;}
+          if(!date.value||!date.validity.valid){toast('期限を入力してください');date.focus();return;}
+          const result=repeatEditor?.read();if(result?.error){toast(result.error);return;}
+          source.title=title;source.dueDate=date.value;if(result)source.recurrence=result.rule;
+          persist();renderHabitEditor();renderHome();toast('To doを更新しました');
+        });
+        actions.append(save,cancel);form.append(contentField,dateField);if(repeatEditor)form.appendChild(repeatEditor.wrap);form.appendChild(actions);row.appendChild(form);edit.disabled=true;content.focus();
+      };
+      const renderTaskRows=(rows,labelText)=>{
+        if(!rows.length)return;const lab=document.createElement('div');lab.className='task-section-label';lab.textContent=labelText;list.appendChild(lab);
+        rows.forEach(t=>{
+          const row=document.createElement('div');row.className='task-row'+(t.done?' done':'');row.dataset.taskId=t.id;if(t.occurrenceDate)row.dataset.occurrenceDate=t.occurrenceDate;
+          const check=document.createElement('button');check.type='button';check.className='task-check'+(t.done?' checked':'');check.textContent=t.done?'✓':'○';check.setAttribute('aria-label',`${t.title} ${t.dueDate||''} ${t.done?'未完了に戻す':'完了にする'}`);
+          check.addEventListener('click',()=>{
+            if(t.recurrence){const source=data.tasks.find(task=>task.id===t.id);if(!source.completions)source.completions={};if(t.done)delete source.completions[t.occurrenceDate];else source.completions[t.occurrenceDate]=new Date().toISOString();}
+            else{t.done=!t.done;t.completedAt=t.done?new Date().toISOString():null;}
+            persist();renderHabitEditor();renderHome();
+          });
+          const titleWrap=document.createElement('div');titleWrap.className='task-title-wrap';const title=document.createElement('div');title.className='task-title';title.textContent=t.title;
+          const meta=document.createElement('div');meta.className='task-meta'+(!t.done&&t.dueDate&&t.dueDate<today?' overdue':'');meta.textContent=t.dueDate?`期限 ${t.dueDate}`:'期限未設定（旧データ）';titleWrap.append(title,meta);
+          if(t.recurrence){const rule=document.createElement('div');rule.className='task-meta';rule.textContent=recurrenceLabel(t.recurrence);titleWrap.appendChild(rule);}
+          const del=document.createElement('button');del.type='button';del.className='task-delete';del.textContent=t.recurrence?'全削除':'削除';
+          del.addEventListener('click',()=>{if(!confirm(t.recurrence?`「${t.title}」の繰り返し全体と完了履歴を永久に削除しますか？`:`「${t.title}」を永久に削除しますか？`))return;data.tasks=data.tasks.filter(x=>x.id!==t.id);persist();renderHabitEditor();renderHome();toast('削除しました');});
+          const actions=document.createElement('div');actions.className='task-actions';const edit=makeButton('編集');edit.addEventListener('click',()=>openTaskEditor(t,row,edit));actions.append(edit,del);row.append(check,titleWrap,actions);list.appendChild(row);
+        });
+      };
+      const repeatHelp=document.createElement('p');repeatHelp.className='help';repeatHelp.textContent='繰り返しは選択日までの各回と、次の予定1回を表示します。';if(data.tasks.some(t=>t.recurrence))card.appendChild(repeatHelp);
+      renderTaskRows(undone,'未完了');renderTaskRows(done,'完了済み');if(!occurrences.length){const e=document.createElement('div');e.className='empty';e.textContent='まだTo doがありません';list.appendChild(e);}card.appendChild(list);
     }
 
     if(h.kind==='duration'){

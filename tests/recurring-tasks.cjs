@@ -1,0 +1,74 @@
+const assert=require('node:assert/strict');
+
+module.exports=async(page,today,checkLayout)=>{
+  const rules=await page.evaluate(()=>{
+    const {taskOccurrences,normalizeData}=window.testApp;
+    const dates=(recurrence,through)=>taskOccurrences([{id:'r',recurrence}],through).map(t=>t.dueDate);
+    const weekly={frequency:'weekly',startDate:'2026-09-28',endDate:'2026-10-09',weekdays:[1,5]};
+    const monthly={frequency:'monthly',startDate:'2024-01-31',endDate:'2024-04-30'};
+    const daily={frequency:'daily',startDate:'2026-12-30',endDate:'2027-01-02'};
+    const recurring={id:'r',title:'test',recurrence:weekly,completions:{'2026-09-28':'2026-09-28T12:00:00Z'}};
+    return {weekly:dates(weekly,'2026-10-30'),monthly:dates(monthly,'2024-05-01'),daily:dates(daily,'2027-01-03'),next:dates({...weekly,endDate:''},'2026-09-29'),before:dates(weekly,'2026-09-01'),completed:taskOccurrences([recurring],'2026-10-02').map(t=>t.done),restored:normalizeData({tasks:[recurring]}).tasks[0],legacy:taskOccurrences([{id:'old',done:true,dueDate:'2026-01-01'}],'2026-10-01')};
+  });
+  assert.deepEqual(rules.weekly,['2026-09-28','2026-10-02','2026-10-05','2026-10-09']);
+  assert.deepEqual(rules.monthly,['2024-01-31','2024-02-29','2024-03-31','2024-04-30']);
+  assert.deepEqual(rules.daily,['2026-12-30','2026-12-31','2027-01-01','2027-01-02']);
+  assert.deepEqual(rules.next,['2026-09-28','2026-10-02']);
+  assert.deepEqual(rules.before,['2026-09-28']);
+  assert.deepEqual(rules.completed,[true,false,false]);
+  assert.equal(rules.restored.completions['2026-09-28'],'2026-09-28T12:00:00Z');
+  assert.equal(rules.legacy[0].done,true);
+
+  const add=page.locator('.task-add');
+  const tasks=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('habitTrackerV1')).tasks);
+  const initial=await tasks();
+  await add.locator('input').first().fill('毎週の掃除');
+  await add.getByLabel('繰り返し',{exact:true}).check();
+  await add.getByLabel('繰り返す間隔').selectOption('weekly');
+  await add.getByRole('button',{name:'To doを追加',exact:true}).click();
+  assert.equal((await tasks()).length,initial.length,'must select weekdays');
+  await add.getByLabel('繰り返しの開始日（必須）',{exact:true}).fill('2026-09-28');
+  await add.getByLabel('月曜',{exact:true}).check();
+  await add.getByLabel('金曜',{exact:true}).check();
+  await add.getByLabel('繰り返しの終了日（任意）').fill('2026-09-27');
+  await add.getByRole('button',{name:'To doを追加',exact:true}).click();
+  assert.equal((await tasks()).length,initial.length,'end cannot precede start');
+  await add.getByLabel('繰り返しの終了日（任意）').fill('2026-10-09');
+  await page.setViewportSize({width:320,height:844});await checkLayout('repeat form 320px');
+  if(process.env.RECURRENCE_SCREENSHOT_PATH)await page.locator('#detailEditor').screenshot({path:process.env.RECURRENCE_SCREENSHOT_PATH});
+  await add.getByRole('button',{name:'To doを追加',exact:true}).click();
+  const weekly=(await tasks()).find(t=>t.title==='毎週の掃除');
+  assert.deepEqual(weekly.recurrence,{frequency:'weekly',startDate:'2026-09-28',endDate:'2026-10-09',weekdays:[1,5]});
+  const row=()=>page.locator(`[data-task-id="${weekly.id}"][data-occurrence-date="2026-09-28"]`);
+  await row().locator('.task-check').click();
+  let stored=(await tasks()).find(t=>t.id===weekly.id);
+  assert.equal(Object.keys(stored.completions).length,1);
+  assert(stored.completions['2026-09-28']);
+  await page.reload();await page.locator('#habitList strong').getByText('To do',{exact:true}).click();
+  assert(await row().locator('.task-check').evaluate(el=>el.classList.contains('checked')));
+  await row().locator('.task-check').click();
+  assert.deepEqual((await tasks()).find(t=>t.id===weekly.id).completions,{});
+  await row().getByRole('button',{name:'編集',exact:true}).click();
+  await row().locator('.task-edit').getByLabel('内容',{exact:true}).fill('毎週の片づけ');
+  await row().locator('.task-edit').getByLabel('繰り返しの終了日（任意）').fill('2026-10-16');
+  await checkLayout('repeat edit 320px');
+  await row().locator('.task-edit').getByRole('button',{name:'保存',exact:true}).click();
+  stored=(await tasks()).find(t=>t.id===weekly.id);assert.equal(stored.title,'毎週の片づけ');assert.equal(stored.recurrence.endDate,'2026-10-16');
+  await page.reload();await page.locator('#habitList strong').getByText('To do',{exact:true}).click();
+  assert.equal((await tasks()).filter(t=>t.id===weekly.id).length,1,'reload cannot duplicate series');
+  for(const [frequency,title] of [['daily','毎日の確認'],['monthly','毎月の確認']]){
+    await add.locator('input').first().fill(title);await add.getByLabel('繰り返し',{exact:true}).check();
+    await add.getByLabel('繰り返す間隔').selectOption(frequency);
+    assert(await add.locator('.repeat-weekdays').isHidden());
+    await add.getByRole('button',{name:'To doを追加',exact:true}).click();
+    const task=(await tasks()).find(t=>t.title===title);assert.equal(task.recurrence.frequency,frequency);assert.equal(task.recurrence.endDate,'');
+  }
+  const allBefore=await tasks();
+  page.once('dialog',dialog=>dialog.dismiss());await row().getByRole('button',{name:'全削除',exact:true}).click();
+  assert.deepEqual(await tasks(),allBefore);
+  page.once('dialog',dialog=>dialog.accept());await row().getByRole('button',{name:'全削除',exact:true}).click();
+  assert(!(await tasks()).some(t=>t.id===weekly.id));
+  assert((await tasks()).some(t=>t.id===initial[0].id),'existing tasks preserved');
+  await page.setViewportSize({width:390,height:844});await checkLayout('recurring task list');
+  console.log('PASS: daily/weekly/monthly recurrence, multiple weekdays, end dates, leap month/year boundaries, per-occurrence completion, editing, deletion, and reload.');
+};

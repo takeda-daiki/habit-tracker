@@ -11,7 +11,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
   new Function(source.match(/<script>([\s\S]*?)<\/script>/)[1]);
   // Expose functions only in this isolated test server, never in the shipped app.
   const instrumented = source.replace('  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));\n  renderHome();',
-    '  window.testApp={aggregateSeries,periodSeries,habitValue,exerciseSeries,normalizeData,chartHTML,shiftDate,weekStart};\n  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));\n  renderHome();');
+    '  window.testApp={aggregateSeries,periodSeries,habitValue,exerciseSeries,normalizeData,chartHTML,shiftDate,weekStart,taskOccurrences,recurringDateMatches};\n  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));\n  renderHome();');
   assert(instrumented.includes('window.testApp='));
   const server = http.createServer((req, res) => {
     if (req.url === '/' || req.url === '/index.html') {
@@ -96,6 +96,38 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
       await checkLayout(name);
       await page.locator('#detailBack').click();
     }
+    // Editing preserves task identity/completion and persists across reloads.
+    await page.locator('#habitList strong').getByText('To do',{exact:true}).click();
+    await page.locator('.task-add input').first().fill('編集前');
+    await page.getByRole('button',{name:'To doを追加',exact:true}).click();
+    const readTask=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('habitTrackerV1')).tasks[0]);
+    await page.locator('.task-check').click();
+    const originalTask=await readTask();
+    await page.locator('.task-actions').getByRole('button',{name:'編集',exact:true}).click();
+    await page.locator('.task-edit').getByLabel('内容').fill('変更を破棄');
+    await page.getByRole('button',{name:'キャンセル',exact:true}).click();
+    assert.deepEqual(await readTask(),originalTask);
+    await page.locator('.task-actions').getByRole('button',{name:'編集',exact:true}).click();
+    await page.locator('.task-edit').getByLabel('内容').fill('   ');
+    await page.locator('.task-edit').getByRole('button',{name:'保存',exact:true}).click();
+    assert.deepEqual(await readTask(),originalTask);
+    await page.locator('.task-edit').getByLabel('内容').fill('編集したTo do');
+    await page.locator('.task-edit').getByLabel('期限（必須）').fill('2027-01-15');
+    await page.setViewportSize({width:320,height:844});await checkLayout('task edit 320px');
+    await page.locator('.task-edit').getByRole('button',{name:'保存',exact:true}).click();
+    assert.deepEqual(await readTask(),{...originalTask,title:'編集したTo do',dueDate:'2027-01-15'});
+    await page.reload();
+    await page.locator('#habitList strong').getByText('To do',{exact:true}).click();
+    assert.equal(await page.locator('.task-title').innerText(),'編集したTo do');
+    assert.equal(await page.locator('.task-meta').innerText(),'期限 2027-01-15');
+    await page.locator('.task-check').click();
+    await page.locator('.task-actions').getByRole('button',{name:'編集',exact:true}).click();
+    await page.locator('.task-edit').getByLabel('期限（必須）').fill('2020-01-01');
+    await page.locator('.task-edit').getByRole('button',{name:'保存',exact:true}).click();
+    assert.equal(await page.locator('.task-meta.overdue').count(),1);
+    await page.setViewportSize({width:390,height:844});
+    await require('./recurring-tasks.cjs')(page,today,checkLayout);
+    await page.locator('#detailBack').click();
     await page.locator('#habitList strong').getByText('筋トレ',{exact:true}).click();
     await page.getByRole('button',{name:'休憩する',exact:true}).click();
     assert.equal(await page.locator('#muscleHistory tbody tr').count(),6);
